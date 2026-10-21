@@ -1,0 +1,65 @@
+17:04:52 - === New Request ===
+17:04:52 - Method: POST
+17:04:52 - POST Input: {"type":"heartbeat","timestamp":1772640441933}
+17:04:52 - Parsed Data: Array
+(
+    [type] => heartbeat
+    [timestamp] => 1772640441933
+)
+
+17:04:52 - Session: , Type: heartbeat, App: Unknown, Key: 
+17:04:52 - === New Request ===
+17:04:52 - Method: POST
+17:04:52 - POST Input: {"type":"heartbeat","timestamp":1772640442085}
+17:04:52 - Parsed Data: Array
+(
+    [type] => heartbeat
+    [timestamp] => 1772640442085
+)
+
+17:04:52 - Session: , Type: heartbeat, App: Unknown, Key: 
+17:04:53 - === New Request ===
+17:04:53 - Method: GET
+17:04:53 - GET Data: {"type":"visibility","state":"hidden","app":"Browser","session":"59131c68222f5aa52dac143f56cc3575_1772639427","url":"https://brittaney-phenetic-dorethea.ngrok-free.dev/keylogger_pro/index.php","timestamp":1772640443309}
+17:04:53 - Parsed Data: Array
+(
+    [type] => visibility
+    [state] => hidden
+    [app] => Browser
+    [session] => 59131c68222f5aa52dac143f56cc3575_1772639427
+    [url] => https://brittaney-phenetic-dorethea.ngrok-free.dev/keylogger_pro/index.php
+    [timestamp] => 1772640443309
+)
+
+17:04:53 - Session: 59131c68222f5aa52dac143f56cc3575_1772639427, Type: visibility, App: Browser, Key: 
+17:04:53 - ✅ Data inserted successfully
+17:04:53 - === New Request ===
+17:04:53 - Method: POST
+17:04:53 - POST Input: {"type":"visibility","state":"hidden","app":"Browser","session":"59131c68222f5aa52dac143f56cc3575_1772639427","url":"https://brittaney-phenetic-dorethea.ngrok-free.dev/keylogger_pro/index.php","timestamp":1772640443309}
+17:04:53 - Parsed Data: Array
+(
+    [type] => visibility
+    [state] => hidden
+    [app] => Browser
+    [session] => 59131c68222f5aa52dac143f56cc3575_1772639427
+    [url] => https://brittaney-phenetic-dorethea.ngrok-free.dev/keylogger_pro/index.php
+    [timestamp] => 1772640443309
+)
+
+17:04:53 - Session: 59131c68222f5aa52dac143f56cc3575_1772639427, Type: visibility, App: Browser, Key: 
+17:04:53 - ✅ Data inserted successfully
+17:04:53 - === New Request ===
+17:04:53 - Method: POST
+17:04:53 - POST Input: {"type":"visibility","state":"hidden","app":"Browser","session":"59131c68222f5aa52dac143f56cc3575_1772639427","url":"https://brittaney-phenetic-dorethea.ngrok-free.dev/keylogger_pro/index.php","timestamp":1772640443309}
+17:04:53 - Parsed Data: Array
+(
+    [type] => visibility
+    [state] => hidden
+    [app] => Browser
+    [session] => 59131c68222f5aa52dac143f56cc3575_1772639427
+    [url] => https://brittaney-phenetic-dorethea.ngrok-free.dev/keylogger_pro/index.php
+    [timestamp] => 1772640443309
+)
+
+17:04:53 - Session: 59131c68222f5aa52dac143f56cc3575_1772639427, Type: visibility, App: Browser, Key: 
+17:04:53 - ✅ Data inserted successfully

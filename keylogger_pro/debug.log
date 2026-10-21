@@ -1,0 +1,48 @@
+2026-03-04 16:53:22 - Request received
+Array
+(
+    [type] => heartbeat
+    [timestamp] => 1772639602324
+)
+2026-03-04 16:54:05 - Request received
+Array
+(
+    [type] => heartbeat
+    [timestamp] => 1772639645742
+)
+2026-03-04 16:54:05 - Request received
+Array
+(
+    [type] => heartbeat
+    [timestamp] => 1772639645739
+)
+2026-03-04 16:54:06 - Request received
+Array
+(
+    [type] => visibility
+    [state] => hidden
+    [app] => Browser
+    [session] => 8c277c4b8a3d50c9a75fb67ea6232fc6_1772639164
+    [url] => http://localhost/keylogger_pro/index.php
+    [timestamp] => 1772639646389
+)
+2026-03-04 16:54:06 - Request received
+Array
+(
+    [type] => visibility
+    [state] => hidden
+    [app] => Browser
+    [session] => 8c277c4b8a3d50c9a75fb67ea6232fc6_1772639164
+    [url] => http://localhost/keylogger_pro/index.php
+    [timestamp] => 1772639646389
+)
+2026-03-04 16:54:06 - Request received
+Array
+(
+    [type] => visibility
+    [state] => hidden
+    [app] => Browser
+    [session] => 8c277c4b8a3d50c9a75fb67ea6232fc6_1772639164
+    [url] => http://localhost/keylogger_pro/index.php
+    [timestamp] => 1772639646389
+)

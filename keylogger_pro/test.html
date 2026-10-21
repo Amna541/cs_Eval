@@ -1,0 +1,24 @@
+<!-- test.html - For testing on phone -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Page</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <h2>Test Form</h2>
+    <input type="text" placeholder="Type here...">
+    <textarea placeholder="Message..."></textarea>
+    
+    <script>
+        // This will help debug if tracking is working
+        console.log('Test page loaded');
+        
+        // Load the tracker
+        let script = document.createElement('script');
+        script.src = 'index.php';
+        document.body.appendChild(script);
+    </script>
+</body>
+</html>

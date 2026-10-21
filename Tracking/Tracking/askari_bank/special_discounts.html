@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exclusive Discounts for Army Personnel</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #004a8e, #0072bc);
+            text-align: center;
+            animation: fadeIn 1s ease-in;
+            color: white;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .container {
+            max-width: 750px;
+            margin: 50px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        h2 {
+            color: #004a8e;
+            font-size: 30px;
+            font-weight: 600;
+        }
+
+        p {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .discount-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .discount-list li {
+            background: rgba(0, 74, 142, 0.1);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #004a8e;
+            display: flex;
+            align-items: center;
+            justify-content: start;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s;
+        }
+
+        .discount-list li:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .discount-list li::before {
+            content: "✔";
+            font-size: 20px;
+            color: #0072bc;
+            margin-right: 12px;
+        }
+
+        .back-button {
+            margin-top: 25px;
+            padding: 14px 30px;
+            background: linear-gradient(135deg, #004a8e, #0072bc);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .back-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(0, 114, 188, 0.7);
+        }
+
+        .back-button::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: left 0.3s;
+        }
+
+        .back-button:hover::after {
+            left: 100%;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🌟 Exclusive Privileges for Our Defence Forces Personnel! 🇵🇰</h2>
+        <p>As a heartfelt tribute to your unwavering service, Askari Bank proudly presents <strong>exclusive financial benefits</strong> designed just for you:</p>
+        
+        <ul class="discount-list">
+            <li>💳 <strong>0% Processing Fee on Personal Loans</strong></li>
+            <li>🏡 <strong>Special Discounted Interest Rates on Home Financing</strong></li>
+            <li>💰 <strong>Advance Salary: Get 2 Months' Salary in Advance</strong></li>
+            <li>🔄 <strong>Exclusive Cashback Offers on Online Transactions</strong></li>
+            <li>🎁 <strong>Premium Discounts on Top Partner Brands</strong></li>
+        </ul>
+        
+        <button class="back-button" onclick="window.location.href='verification.html';">🎖 Proceed to Verification</button>
+    </div>
+</body>
+</html>

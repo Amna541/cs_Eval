@@ -1,0 +1,221 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hackathon 2025</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+        }
+        header {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .logo img {
+            height: 50px;
+        }
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+        .nav-links a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        .nav-links a:hover {
+            color: #ffdd57;
+        }
+        .hero {
+            text-align: center;
+            padding: 100px 20px;
+            background: rgba(0,0,0,0.5);
+            animation: fadeIn 2s;
+        }
+        .banner-img {
+            max-width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+        h2 {
+            font-size: 2.5em;
+            margin-top: 20px;
+            animation: slideIn 1.5s ease;
+        }
+        p {
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+        .btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 15px 30px;
+            background-color: #ffdd57;
+            color: #333;
+            font-weight: 700;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+        .btn:hover {
+            transform: scale(1.1);
+        }
+        section {
+            padding: 60px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        form input, form button {
+            display: block;
+            margin: 20px 0;
+            padding: 15px;
+            width: 100%;
+            border-radius: 10px;
+            border: none;
+            font-size: 1em;
+        }
+        form button {
+            background-color: #ffdd57;
+            color: #333;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        form button:hover {
+            background-color: #ffc107;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0,0,0,0.6);
+            bottom: -90px;
+        }
+
+        @keyframes fadeIn {
+            0% {opacity: 0;}
+            100% {opacity: 1;}
+        }
+        @keyframes slideIn {
+            0% {transform: translateY(-50px); opacity: 0;}
+            100% {transform: translateY(0); opacity: 1;}
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <img src="ieeee.png" alt="Hackathon Logo">
+            </div>
+            <ul class="nav-links">
+                <li><a href="#about">About</a></li>
+                <li><a href="#register">Register</a></li>
+                <li><a href="#event-info">Event Info</a></li>
+                <li><a href="#judging">Judging</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <img src="1.png" alt="Hackathon Banner" class="banner-img">
+        <h2>Welcome to Hackathon 2025</h2>
+        <p>Join the biggest coding competition of the year! Innovate, collaborate, and win amazing prizes.</p>
+        <a href="#register" class="btn">Register Now</a>
+    </section>
+
+    <section id="about">
+        <h2>About the Hackathon</h2>
+        <p>Hackathon 2025 is a global competition for developers, designers, and problem-solvers. Teams will compete to build the next big tech solution in 48 hours.</p>
+    </section>
+
+    <section id="ieee-challenge">
+        <h2>IEEE IES Generative AI Challenge 2025</h2>
+        <p>The IEEE IES Generative AI Challenge is an international research-focused hackathon aimed at pioneering innovative Generative AI applications within Industry 4.0. Building on the success of last year’s inaugural event, where we received 150 project proposals from 13 countries, shortlisted 43 teams, and produced groundbreaking solutions, we’re excited to bring you a more comprehensive experience in 2025.</p>
+        <p>This hackathon is open to anyone from any background, whether you have prior experience in academic writing or not. You don’t need to be an IEEE member or have a fully developed project. Even if you just have an idea, we will guide you through the process of turning it into a reality and help you publish your work within the scientific community.</p>
+    </section>
+
+    <section id="why-generative-ai">
+        <h2>Why Generative AI?</h2>
+        <p>Generative AI has the power to revolutionize industries by enabling efficient processes, data-driven insights, and intelligent automation. From predictive maintenance and defect detection to supply chain optimization and energy management, Generative AI addresses the complex, real-world needs of industrial and IoT systems. Advanced techniques such as deep learning and transformer-based models empower teams to create novel, AI-driven solutions that redefine what’s possible in industrial innovation.</p>
+    </section>
+
+    <section id="why-ieee-ies">
+        <h2>Why IEEE IES?</h2>
+        <p>As part of the IEEE Industrial Electronics Society, we’re committed to advancing technology for industry. Our goal is to foster academic and commercial collaborations, nurturing practical solutions that blend engineering expertise with cutting-edge research. By organizing this hackathon, IEEE IES provides a global platform for students, researchers, and professionals to push the boundaries of industrial electronics, ultimately shaping safer, more efficient, and more sustainable systems.</p>
+    </section>
+
+    <section id="hackathon-info">
+        <h2>What This Hackathon Offers You</h2>
+        <ul>
+            <li>Three structured milestones to build up your research project.</li>
+            <li>Expert mentorship in Generative AI and research to evolve your idea from its initial stage to a publishable form.</li>
+            <li>Travel grants for the top 6 teams to attend IECON 2025 in person.</li>
+            <li>Up to USD 100 for hardware or software resources for all teams completing the hackathon.</li>
+        </ul>
+    </section>
+
+    <section id="hackathon-timeline">
+        <h2>Hackathon Timeline</h2>
+        <p>This hackathon runs for 2.5 months—from February to April 2025—culminating in the opportunity to present your published paper at IECON 2025 in Madrid, Spain (October 14–17, 2025). Along this journey:</p>
+        <ul>
+            <li>You’ll be paired with mentors who possess both industry expertise and a strong research background.</li>
+            <li>You’ll develop state-of-the-art Generative AI solutions for real-world industrial problems.</li>
+            <li>You’ll learn how to transform a prototype into a full-fledged research paper that meets peer-review standards.</li>
+        </ul>
+    </section>
+
+    <section id="example-use-cases">
+        <h2>Example Use Cases</h2>
+        <p>Generative AI demonstrates transformative potential in countless industrial and IoT scenarios. Here are a few inspirations:</p>
+        <ul>
+            <li>Generative Design for Manufacturing</li>
+            <li>Human-Machine Collaboration</li>
+            <li>Anomaly Quality Control & Defect Detection</li>
+            <li>Energy Optimization</li>
+            <li>Predictive Maintenance</li>
+        </ul>
+    </section>
+
+    <section id="register">
+        <h2>Register Now</h2>
+        <form action="register.php" method="POST">
+            <input type="text" name="name" placeholder="Your Name" required>
+            <input type="email" name="email" placeholder="Your Email" required>
+            <input type="text" name="team" placeholder="Team Name" required>
+            <button type="submit" class="btn">Register</button>
+        </form>
+    </section>
+
+    <section id="contact">
+        <h2>Contact Us</h2>
+        <p>Have any questions? Feel free to contact us at <a href="mailto:info@hackathon2025.com">info@hackathon2025.com</a>.</p>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 Hackathon 2025. All Rights Reserved.</p>
+    </footer>
+
+</body>
+</html>

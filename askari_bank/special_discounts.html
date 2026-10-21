@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Special Discounts for Army Personnel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #eef2f7;
+            text-align: center;
+            animation: fadeIn 1s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        h2 {
+            color: #004a8e;
+            font-size: 28px;
+        }
+
+        .discount-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .discount-list li {
+            background: #d0e1f9;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: transform 0.3s;
+        }
+
+        .discount-list li:hover {
+            transform: scale(1.05);
+        }
+
+        .back-button {
+            margin-top: 20px;
+            padding: 12px 25px;
+            background-color: #004a8e;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .back-button:hover {
+            background-color: #003366;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Exclusive Discounts for Army Personnel</h2>
+        <p>As a token of our appreciation, Askari Bank offers the following exclusive discounts for army personnel:</p>
+        <ul class="discount-list">
+            <li>0% processing fee on personal loans</li>
+            <li>Discounted interest rates on home financing</li>
+            <li>Free credit card for the first year</li>
+            <li>Special cashback offers on online transactions</li>
+            <li>Exclusive discounts on partner brands</li>
+        </ul>
+        <button class="back-button" onclick="window.location.href='verification.html';">Proceed</button>
+    </div>
+</body>
+</html>

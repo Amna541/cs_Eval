@@ -1,0 +1,12 @@
+[9652:22224:0903/150538.831:INFO:components\enterprise\browser\controller\chrome_browser_cloud_management_controller.cc:202] No machine level policy manager exists.
+[21676:22388:0903/150539.101:INFO:third_party\webrtc\rtc_base\cpu_info.cc:88] Available number of cores: 12
+[10276:10016:0903/150539.101:INFO:third_party\webrtc\rtc_base\cpu_info.cc:88] Available number of cores: 12
+[18092:1888:0903/150539.490:VERBOSE1:components\viz\service\main\viz_main_impl.cc:86] VizNullHypothesis is disabled (not a warning)
+[9740:21980:0903/150539.910:INFO:third_party\webrtc\rtc_base\cpu_info.cc:88] Available number of cores: 12
+[9652:22224:0903/150540.207:INFO:CONSOLE:115] "Event handler of 'x-storagemutated-1' event must be added on the initial evaluation of worker script.", source: https://static.whatsapp.net/rsrc.php/v4/y0/r/Y-He2NTJVx_.js (115)
+[16068:8364:0903/150540.310:INFO:third_party\webrtc\rtc_base\cpu_info.cc:88] Available number of cores: 12
+[5044:396:0903/150540.996:INFO:third_party\webrtc\rtc_base\cpu_info.cc:88] Available number of cores: 12
+[9652:14788:0903/150556.526:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT
+[9652:22224:0903/150556.979:INFO:CONSOLE:115] "Event handler of 'x-storagemutated-1' event must be added on the initial evaluation of worker script.", source: https://static.whatsapp.net/rsrc.php/v4/y0/r/Y-He2NTJVx_.js (115)
+[10100:16780:0903/150601.054:WARNING:net\extras\sqlite\sqlite_persistent_store_backend_base.cc:176] Failed to post task from FlushAndNotifyInBackground@net\extras\sqlite\sqlite_persistent_store_backend_base.cc:226 to client_task_runner_.
+[10100:16780:0903/150601.054:WARNING:net\extras\sqlite\sqlite_persistent_store_backend_base.cc:176] Failed to post task from FlushAndNotifyInBackground@net\extras\sqlite\sqlite_persistent_store_backend_base.cc:226 to client_task_runner_.

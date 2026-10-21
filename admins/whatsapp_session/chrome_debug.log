@@ -1,0 +1,30 @@
+[6736:3972:0905/131425.366:INFO:components\enterprise\browser\controller\chrome_browser_cloud_management_controller.cc:202] No machine level policy manager exists.
+[16896:13696:0905/131425.528:INFO:third_party\webrtc\rtc_base\cpu_info.cc:88] Available number of cores: 12
+[13328:3672:0905/131425.538:INFO:third_party\webrtc\rtc_base\cpu_info.cc:88] Available number of cores: 12
+[7960:16296:0905/131425.806:VERBOSE1:components\viz\service\main\viz_main_impl.cc:86] VizNullHypothesis is disabled (not a warning)
+[16524:3760:0905/131426.118:INFO:third_party\webrtc\rtc_base\cpu_info.cc:88] Available number of cores: 12
+[18616:6628:0905/131426.302:INFO:third_party\webrtc\rtc_base\cpu_info.cc:88] Available number of cores: 12
+[6736:3972:0905/131426.432:INFO:CONSOLE:115] "Event handler of 'x-storagemutated-1' event must be added on the initial evaluation of worker script.", source: https://static.whatsapp.net/rsrc.php/v4/yx/r/gKfOuhE_gwN.js (115)
+[6736:5932:0905/131426.499:ERROR:content\browser\indexed_db\instance\leveldb\backing_store.cc:1611] Got corruption for { origin: https://web.whatsapp.com, top-level site: https://whatsapp.com, nonce: <null>, ancestor chain bit: Same-Site }, Unknown corruption
+[6736:5932:0905/131426.506:ERROR:content\browser\indexed_db\instance\leveldb\backing_store.cc:1479] IndexedDB recovering from a corrupted (and deleted) database.
+[7192:14116:0905/131426.872:INFO:third_party\webrtc\rtc_base\cpu_info.cc:88] Available number of cores: 12
+[6736:11848:0905/131433.622:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: QUOTA_EXCEEDED
+[6736:9868:0905/131555.430:INFO:rlz\lib\rlz_lib.cc:442] Attempting to send RLZ ping brand=VDKB
+[6736:9868:0905/131556.386:INFO:rlz\lib\rlz_lib.cc:451] Succeeded in sending RLZ ping
+[12296:5776:0905/131627.519:VERBOSE1:components\viz\service\main\viz_main_impl.cc:86] VizNullHypothesis is disabled (not a warning)
+[6736:3972:0905/131823.479:INFO:CONSOLE:151] "Uncaught (in promise) DbOnLogoutAbortError: dropping db read operation due to logout", source: https://static.whatsapp.net/rsrc.php/v4/yi/r/ZMBCWg2qzcs.js (151)
+[6736:3972:0905/131823.480:INFO:CONSOLE:151] "Uncaught (in promise) DbOnLogoutAbortError: dropping db write operation due to logout", source: https://static.whatsapp.net/rsrc.php/v4/yi/r/ZMBCWg2qzcs.js (151)
+[6736:3972:0905/131823.480:INFO:CONSOLE:151] "Uncaught (in promise) DbOnLogoutAbortError: dropping db write operation due to logout", source: https://static.whatsapp.net/rsrc.php/v4/yi/r/ZMBCWg2qzcs.js (151)
+[6736:3972:0905/131823.480:INFO:CONSOLE:151] "Uncaught (in promise) DbOnLogoutAbortError: dropping db write operation due to logout", source: https://static.whatsapp.net/rsrc.php/v4/yi/r/ZMBCWg2qzcs.js (151)
+[6736:3972:0905/131824.477:INFO:CONSOLE:0] "Uncaught (in promise) DbOnLogoutAbortError: dropping db write operation due to logout", source: https://web.whatsapp.com/ (0)
+[6736:3972:0905/131824.477:INFO:CONSOLE:0] "Uncaught (in promise) DbOnLogoutAbortError: dropping db write operation due to logout", source: https://web.whatsapp.com/ (0)
+[6736:3972:0905/131824.477:INFO:CONSOLE:0] "Uncaught (in promise) DbOnLogoutAbortError: dropping db write operation due to logout", source: https://web.whatsapp.com/ (0)
+[6736:3972:0905/131824.478:INFO:CONSOLE:0] "Uncaught (in promise) DbOnLogoutAbortError: dropping db write operation due to logout", source: https://web.whatsapp.com/ (0)
+[6736:3972:0905/131824.479:INFO:CONSOLE:0] "Uncaught (in promise) DbOnLogoutAbortError: dropping db write operation due to logout", source: https://web.whatsapp.com/ (0)
+[6736:3972:0905/131824.479:INFO:CONSOLE:0] "Uncaught (in promise) DbOnLogoutAbortError: dropping db write operation due to logout", source: https://web.whatsapp.com/ (0)
+[6736:3972:0905/131824.480:INFO:CONSOLE:0] "Uncaught (in promise) DbOnLogoutAbortError: dropping db write operation due to logout", source: https://web.whatsapp.com/ (0)
+[6736:3972:0905/131824.480:INFO:CONSOLE:0] "Uncaught (in promise) DbOnLogoutAbortError: dropping db write operation due to logout", source: https://web.whatsapp.com/ (0)
+[6736:3972:0905/131824.481:INFO:CONSOLE:151] "Uncaught (in promise) DbOnLogoutAbortError: dropping db read operation due to logout", source: https://static.whatsapp.net/rsrc.php/v4/yi/r/ZMBCWg2qzcs.js (151)
+[6736:3972:0905/131824.670:INFO:CONSOLE:0] "Uncaught (in promise) DbOnLogoutAbortError: dropping db write operation due to logout", source: https://web.whatsapp.com/static_resources/webworker_v1/init_script/?__hs=20336.HYP%3Awhatsapp_comet_pkg.2.1...0&__spin_r=1026747075&__spin_b=trunk&__spin_t=1757060066 (0)
+[11028:13648:0905/131826.980:WARNING:net\extras\sqlite\sqlite_persistent_store_backend_base.cc:176] Failed to post task from FlushAndNotifyInBackground@net\extras\sqlite\sqlite_persistent_store_backend_base.cc:226 to client_task_runner_.
+[11028:13648:0905/131826.980:WARNING:net\extras\sqlite\sqlite_persistent_store_backend_base.cc:176] Failed to post task from FlushAndNotifyInBackground@net\extras\sqlite\sqlite_persistent_store_backend_base.cc:226 to client_task_runner_.

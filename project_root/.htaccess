@@ -1,0 +1,3 @@
+
+RewriteEngine On
+RewriteRule ^tracking/([a-zA-Z0-9]+)/?$ pages/tracking.php?link=$1 [L,QSA]

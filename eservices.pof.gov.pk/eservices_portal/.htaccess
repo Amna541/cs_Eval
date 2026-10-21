@@ -1,0 +1,16 @@
+# Enable URL rewriting
+RewriteEngine On
+RewriteBase /eservices.pof.gov.pk/eservices_portal/
+
+# 1) Redirect any .php requests to clean URL (301 Permanent)
+RewriteCond %{THE_REQUEST} \s/eservices\.pof\.gov\.pk/eservices_portal/([^\s]+)\.php [NC]
+RewriteRule ^ %1 [R=301,L]
+
+# 2) Internally rewrite clean URLs to corresponding .php files
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^([^\./]+)$ $1.php [L]
+
+# 3) Set default page for the folder
+DirectoryIndex login.php
