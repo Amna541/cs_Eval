@@ -13,9 +13,15 @@ define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_NAME', 'user_management');
-require 'vendor/autoload.php'; // PhpSpreadsheet autoload
+
+// ZAROORI: Vendor folder ka path check karein. 
+// Agar file 'admins' folder mein hai aur vendor 'htdocs' mein hai, toh yeh line theek hai:
+require __DIR__ . '/../vendor/autoload.php'; 
+
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Reader\IReadFilter;
+use Smalot\PdfParser\Parser; // PDF Parser Library
+
 class ChunkReadFilter implements IReadFilter
 {
     private int $startRow = 0;
@@ -116,13 +122,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (isset($_FILES['excel_file']) && $_FILES['excel_file']['error'] == 0) {
             // Check file extension
-            $allowedExtensions = ['xlsx', 'xls', 'csv'];
+            $allowedExtensions = ['xlsx', 'xls', 'csv', 'pdf']; // Added PDF
             $fileName = $_FILES['excel_file']['name'];
             $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
             
             if (!in_array($fileExt, $allowedExtensions)) {
-                $_SESSION['error'] = "Invalid file type. Please upload Excel files (.xlsx, .xls) or CSV.";
-                ob_end_clean(); // Clear buffer before redirect
+                $_SESSION['error'] = "Invalid file type. Please upload Excel (.xlsx, .xls), CSV, or PDF.";
+                ob_end_clean();
                 header("Location: " . $_SERVER['PHP_SELF'] . "?group=" . urlencode($groupName));
                 exit();
             }
@@ -135,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($result->num_rows === 0) {
                 $_SESSION['error'] = "Group not found!";
-                ob_end_clean(); // Clear buffer before redirect
+                ob_end_clean();
                 header("Location: " . $_SERVER['PHP_SELF'] . "?group=" . urlencode($groupName));
                 exit();
             }
@@ -148,313 +154,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errorCount = 0;
             $importedUsers = [];
             
-            // For CSV files (faster for large datasets)
-            if ($fileExt === 'csv') {
+            // ==========================================
+            // SMART PDF FILE PROCESSING
+            // ==========================================
+            if ($fileExt === 'pdf') {
                 try {
-                    $handle = fopen($filePath, 'r');
-                    if ($handle !== false) {
-                        $rowCount = 0;
-                        $conn->autocommit(FALSE); // Start transaction
-                        
-                        while (($row = fgetcsv($handle, 1000, ',')) !== false) {
-                            $rowCount++;
-                            // Skip header row
-                            if ($rowCount === 1) continue;
-                            
-                            // Clean the data - Pakistan Government Format
-                            // A = Sr# (0) - SKIP
-                            // B = NAME (1)
-                            // C = PI# (2) - Optional
-                            // D = BPS (3) - Optional
-                            // E = DESIGN (4) - Designation
-                            // F = DEPTT (5) - Optional
-                            // G = CNIC (6) - Optional (could be email)
-                            // H = CONTACT (7) - Mobile number
-                            
-                            $userName = isset($row[1]) ? trim($row[1]) : '';
-                            $mobile = isset($row[7]) ? trim($row[7]) : '';
-                            $designation = isset($row[4]) ? trim($row[4]) : '';
-                            $email = isset($row[6]) ? trim($row[6]) : '';
-                            
-                            // Skip empty rows
-                            if (empty($userName) || empty($mobile)) {
-                                $errorCount++;
-                                continue;
-                            }
-                            
-                            // Pakistan Mobile Validation
-                            $mobile = preg_replace('/[^0-9]/', '', $mobile);
-                            
-                            if (strlen($mobile) < 10) {
-                                $errorCount++;
-                                continue;
-                            }
-                            
-                            // Keep only last 10 digits if longer
-                            if (strlen($mobile) > 10) {
-                                $mobile = substr($mobile, -10);
-                            }
-                            
-                            // Generate email if not provided or invalid
-                            if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                                $cleanName = preg_replace('/[^a-zA-Z0-9\s]/', '', $userName);
-                                $email = strtolower(str_replace(' ', '.', $cleanName)) . '@example.com';
-                                $email = substr($email, 0, 50);
-                            }
-                            
-                            // Add PI# and BPS to designation if available
-                            if (isset($row[2]) && !empty(trim($row[2]))) {
-                                $piNumber = trim($row[2]);
-                                if (!empty($designation)) {
-                                    $designation .= " (PI#: $piNumber)";
-                                } else {
-                                    $designation = "PI#: $piNumber";
-                                }
-                            }
-                            
-                            if (isset($row[3]) && !empty(trim($row[3]))) {
-                                $bps = trim($row[3]);
-                                if (!empty($designation)) {
-                                    $designation .= " BPS-$bps";
-                                } else {
-                                    $designation = "BPS-$bps";
-                                }
-                            }
-                            
-                            // Insert into users table
-                            try {
-                                $stmt = $conn->prepare("INSERT INTO users (group_id, name, designation, mobile, email) VALUES (?, ?, ?, ?, ?)");
-                                $stmt->bind_param("issss", $groupId, $userName, $designation, $mobile, $email);
-                                
-                                if ($stmt->execute()) {
-                                    $successCount++;
-                                    if ($successCount <= 20) { // Store only first 20 names for display
-                                        $importedUsers[] = $userName;
-                                    }
-                                } else {
-                                    $errorCount++;
-                                }
-                            } catch (Exception $e) {
-                                $errorCount++;
-                            }
-                            
-                            // REMOVED: Show progress every 100 rows
-                            // if ($rowCount % 100 === 0) {
-                            //     flush(); // THIS CAUSES HEADERS ALREADY SENT ERROR
-                            // }
-                        }
-                        fclose($handle);
-                        $conn->commit();
-                        $conn->autocommit(TRUE);
-                    }
-                } catch (Exception $e) {
-                    $conn->rollback();
-                    $conn->autocommit(TRUE);
-                    $_SESSION['error'] = "Error processing CSV file: " . $e->getMessage();
-                    ob_end_clean(); // Clear buffer before redirect
-                    header("Location: " . $_SERVER['PHP_SELF'] . "?group=" . urlencode($groupName));
-                    exit();
-                }
-            } 
-            // For Excel files (optimized for large files)
-            else {
-                try {
-                    // Optimized loading for large Excel files
-                    $reader = IOFactory::createReader(ucfirst($fileExt));
-                    $reader->setReadDataOnly(true); // Read only data, not formatting
-                    $reader->setReadEmptyCells(false); // Skip empty cells
+                    $parser = new Parser();
+                    $pdf = $parser->parseFile($filePath);
+                    $text = $pdf->getText();
                     
-                    // For XLSX files, use chunk reading
-                    if ($fileExt === 'xlsx') {
-                        $chunkFilter = new ChunkReadFilter();
-                        $reader->setReadFilter($chunkFilter);
-                        
-                        // Read in chunks of 500 rows
-                        $chunkSize = 500;
-                        $chunkFilter->setRows(0, $chunkSize);
-                        
-                        $totalRows = 0;
-                        $conn->autocommit(FALSE); // Start transaction
-                        
-                        // Read file in chunks
-                        for ($startRow = 1; $startRow <= 1500; $startRow += $chunkSize) {
-                            $chunkFilter->setRows($startRow, $chunkSize);
-                            $spreadsheet = $reader->load($filePath);
-                            $sheet = $spreadsheet->getActiveSheet();
-                            $rows = $sheet->toArray();
+                    // Poore text ko ek line mein badal dein taake spacing ka masla hal ho jaye
+                    $text = preg_replace('/\s+/', ' ', $text);
+                    
+                    // Smart Regex: 
+                    // 10 se 11 digits wale number (Mobile) dhoond rahe hain
+                    // Us number se pehle jo bhi text (Name) aayen, unhe utha rahe hain
+                    $pattern = '/(?:^|\s)([a-zA-Z\.\s]{3,50})\s+(\d{10,11})(?=\s|$)/i';
+                    
+                    $conn->autocommit(FALSE); // Start transaction
+                    
+                    if (preg_match_all($pattern, $text, $matches, PREG_SET_ORDER)) {
+                        foreach ($matches as $match) {
+                            $userName = trim($match[1]);
+                            $mobile = trim($match[2]);
                             
-                            if (empty($rows)) break;
-                            
-                            foreach ($rows as $index => $row) {
-                                $actualRow = $startRow + $index;
-                                // Skip header row
-                                if ($actualRow === 1) continue;
-                                
-                                // Clean the data - Pakistan Government Format
-                                // A = Sr# (0) - SKIP
-                                // B = NAME (1)
-                                // C = PI# (2) - Optional
-                                // D = BPS (3) - Optional
-                                // E = DESIGN (4) - Designation
-                                // F = DEPTT (5) - Optional
-                                // G = CNIC (6) - Optional (could be email)
-                                // H = CONTACT (7) - Mobile number
-                                
-                                $userName = isset($row[1]) ? trim($row[1]) : '';
-                                $mobile = isset($row[7]) ? trim($row[7]) : '';
-                                $designation = isset($row[4]) ? trim($row[4]) : '';
-                                $email = isset($row[6]) ? trim($row[6]) : '';
-                                
-                                // Skip empty rows
-                                if (empty($userName) || empty($mobile)) {
-                                    $errorCount++;
-                                    continue;
-                                }
-                                
-                                // Pakistan Mobile Validation
-                                $mobile = preg_replace('/[^0-9]/', '', $mobile);
-                                
-                                if (strlen($mobile) < 10) {
-                                    $errorCount++;
-                                    continue;
-                                }
-                                
-                                // Keep only last 10 digits if longer
-                                if (strlen($mobile) > 10) {
-                                    $mobile = substr($mobile, -10);
-                                }
-                                
-                                // Generate email if not provided or invalid
-                                if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                                    $cleanName = preg_replace('/[^a-zA-Z0-9\s]/', '', $userName);
-                                    $email = strtolower(str_replace(' ', '.', $cleanName)) . '@example.com';
-                                    $email = substr($email, 0, 50);
-                                }
-                                
-                                // Add PI# and BPS to designation if available
-                                if (isset($row[2]) && !empty(trim($row[2]))) {
-                                    $piNumber = trim($row[2]);
-                                    if (!empty($designation)) {
-                                        $designation .= " (PI#: $piNumber)";
-                                    } else {
-                                        $designation = "PI#: $piNumber";
-                                    }
-                                }
-                                
-                                if (isset($row[3]) && !empty(trim($row[3]))) {
-                                    $bps = trim($row[3]);
-                                    if (!empty($designation)) {
-                                        $designation .= " BPS-$bps";
-                                    } else {
-                                        $designation = "BPS-$bps";
-                                    }
-                                }
-                                
-                                // Insert into users table
-                                try {
-                                    $stmt = $conn->prepare("INSERT INTO users (group_id, name, designation, mobile, email) VALUES (?, ?, ?, ?, ?)");
-                                    $stmt->bind_param("issss", $groupId, $userName, $designation, $mobile, $email);
-                                    
-                                    if ($stmt->execute()) {
-                                        $successCount++;
-                                        if ($successCount <= 20) {
-                                            $importedUsers[] = $userName;
-                                        }
-                                    } else {
-                                        $errorCount++;
-                                    }
-                                } catch (Exception $e) {
-                                    $errorCount++;
-                                }
-                            }
-                            
-                            // Clear memory
-                            unset($spreadsheet, $sheet, $rows);
-                            
-                            // REMOVED: Show progress
-                            // if ($actualRow % 100 === 0) {
-                            //     flush(); // THIS CAUSES HEADERS ALREADY SENT ERROR
-                            // }
-                        }
-                        $conn->commit();
-                        $conn->autocommit(TRUE);
-                    } 
-                    // For XLS files (smaller files)
-                    else {
-                        $spreadsheet = $reader->load($filePath);
-                        $sheet = $spreadsheet->getActiveSheet();
-                        $rows = $sheet->toArray();
-                        
-                        $conn->autocommit(FALSE); // Start transaction
-                        
-                        foreach ($rows as $index => $row) {
-                            // Skip header row
-                            if ($index === 0) continue;
-                            
-                            // Clean the data - Pakistan Government Format
-                            // A = Sr# (0) - SKIP
-                            // B = NAME (1)
-                            // C = PI# (2) - Optional
-                            // D = BPS (3) - Optional
-                            // E = DESIGN (4) - Designation
-                            // F = DEPTT (5) - Optional
-                            // G = CNIC (6) - Optional (could be email)
-                            // H = CONTACT (7) - Mobile number
-                            
-                            $userName = isset($row[1]) ? trim($row[1]) : '';
-                            $mobile = isset($row[7]) ? trim($row[7]) : '';
-                            $designation = isset($row[4]) ? trim($row[4]) : '';
-                            $email = isset($row[6]) ? trim($row[6]) : '';
-                            
-                            // Skip empty rows
-                            if (empty($userName) || empty($mobile)) {
-                                $errorCount++;
-                                continue;
-                            }
-                            
-                            // Pakistan Mobile Validation
+                            // Mobile validation
                             $mobile = preg_replace('/[^0-9]/', '', $mobile);
+                            if (strlen($mobile) > 10) {
+                                $mobile = substr($mobile, -10); // Keep last 10 digits
+                            }
                             
-                            if (strlen($mobile) < 10) {
+                            // Name se extra numbers ya "Sr" waghera hata dein
+                            $userName = preg_replace('/^[0-9]+\s*/', '', $userName); 
+                            
+                            if (empty($userName) || strlen($mobile) < 10) {
                                 $errorCount++;
                                 continue;
                             }
                             
-                            // Keep only last 10 digits if longer
-                            if (strlen($mobile) > 10) {
-                                $mobile = substr($mobile, -10);
-                            }
+                            // Auto-generate email
+                            $cleanName = preg_replace('/[^a-zA-Z0-9\s]/', '', $userName);
+                            $email = strtolower(str_replace(' ', '.', $cleanName)) . '@example.com';
+                            $email = substr($email, 0, 50);
                             
-                            // Generate email if not provided or invalid
-                            if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                                $cleanName = preg_replace('/[^a-zA-Z0-9\s]/', '', $userName);
-                                $email = strtolower(str_replace(' ', '.', $cleanName)) . '@example.com';
-                                $email = substr($email, 0, 50);
-                            }
-                            
-                            // Add PI# and BPS to designation if available
-                            if (isset($row[2]) && !empty(trim($row[2]))) {
-                                $piNumber = trim($row[2]);
-                                if (!empty($designation)) {
-                                    $designation .= " (PI#: $piNumber)";
-                                } else {
-                                    $designation = "PI#: $piNumber";
-                                }
-                            }
-                            
-                            if (isset($row[3]) && !empty(trim($row[3]))) {
-                                $bps = trim($row[3]);
-                                if (!empty($designation)) {
-                                    $designation .= " BPS-$bps";
-                                } else {
-                                    $designation = "BPS-$bps";
-                                }
-                            }
-                            
-                            // Insert into users table
+                            // Insert into DB
                             try {
                                 $stmt = $conn->prepare("INSERT INTO users (group_id, name, designation, mobile, email) VALUES (?, ?, ?, ?, ?)");
-                                $stmt->bind_param("issss", $groupId, $userName, $designation, $mobile, $email);
+                                $emptyDesig = '';
+                                $stmt->bind_param("issss", $groupId, $userName, $emptyDesig, $mobile, $email);
                                 
                                 if ($stmt->execute()) {
                                     $successCount++;
@@ -467,55 +214,238 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             } catch (Exception $e) {
                                 $errorCount++;
                             }
-                            
-                            // REMOVED: Show progress every 100 rows
-                            // if ($index % 100 === 0) {
-                            //     flush(); // THIS CAUSES HEADERS ALREADY SENT ERROR
-                            // }
                         }
-                        $conn->commit();
-                        $conn->autocommit(TRUE);
+                    } else {
+                        // Fallback: Agar smart regex fail ho jaye, toh line-by-line check karein
+                        $lines = preg_split('/\r\n|\r|\n/', $pdf->getText());
+                        foreach ($lines as $line) {
+                            if (preg_match('/(\d{10,11})/', trim($line), $mobileMatches)) {
+                                $mobile = substr($mobileMatches[1], -10);
+                                // Mobile se pehle ka text nikalne ki koshish
+                                $parts = explode($mobileMatches[1], trim($line));
+                                $userName = trim(preg_replace('/^[0-9]+\s*/', '', $parts[0] ?? ''));
+
+                                if (!empty($userName) && strlen($mobile) >= 10) {
+                                    $cleanName = preg_replace('/[^a-zA-Z0-9\s]/', '', $userName);
+                                    $email = strtolower(str_replace(' ', '.', $cleanName)) . '@example.com';
+                                    
+                                    try {
+                                        $stmt = $conn->prepare("INSERT INTO users (group_id, name, designation, mobile, email) VALUES (?, ?, ?, ?, ?)");
+                                        $emptyDesig = '';
+                                        $stmt->bind_param("issss", $groupId, $userName, $emptyDesig, $mobile, $email);
+                                        if ($stmt->execute()) { 
+                                            $successCount++; 
+                                            if ($successCount <= 20) $importedUsers[] = $userName; 
+                                        }
+                                    } catch (Exception $e) {}
+                                }
+                            }
+                        }
                     }
+                    
+                    $conn->commit();
+                    $conn->autocommit(TRUE);
                     
                 } catch (Exception $e) {
-                    if (isset($conn) && method_exists($conn, 'rollback')) {
-                        $conn->rollback();
-                        $conn->autocommit(TRUE);
-                    }
-                    
-                    $errorMessage = $e->getMessage();
-                    
-                    // Provide user-friendly error messages
-                    if (strpos($errorMessage, 'password') !== false || strpos($errorMessage, 'encrypted') !== false) {
-                        $_SESSION['error'] = "ERROR: The Excel file is password-protected!<br><br>
-                        <strong>To fix this:</strong><br>
-                        1. Open the Excel file with your password<br>
-                        2. Click <strong>File → Info → Protect Workbook → Encrypt with Password</strong><br>
-                        3. <strong>Delete/clear</strong> the password from the box<br>
-                        4. Click <strong>OK</strong><br>
-                        5. <strong>Save As</strong> a new file (File → Save As → choose .csv format for faster upload)<br>
-                        6. Upload the new file<br><br>
-                        <em>Tip: For large files (1400+ users), save as CSV format for faster import!</em>";
-                    } elseif (strpos($errorMessage, 'zip') !== false || strpos($errorMessage, 'archive') !== false) {
-                        $_SESSION['error'] = "The Excel file appears to be corrupted. Please:<br>
-                        1. Open the file in Excel<br>
-                        2. Go to File → Save As<br>
-                        3. Save as a new file (<strong>.csv format recommended for large files</strong>)<br>
-                        4. Upload the new file";
-                    } elseif (strpos($errorMessage, 'time') !== false) {
-                        $_SESSION['error'] = "File too large to process. Please:<br>
-                        1. Split your Excel file into smaller files (max 500 rows each)<br>
-                        2. Or save your file as <strong>CSV format</strong><br>
-                        3. Upload smaller files separately";
-                    } else {
-                        $_SESSION['error'] = "Error reading Excel file: " . $errorMessage;
-                    }
-                    ob_end_clean(); // Clear buffer before redirect
+                    $conn->rollback();
+                    $conn->autocommit(TRUE);
+                    $_SESSION['error'] = "Error processing PDF file: " . $e->getMessage();
+                    ob_end_clean();
                     header("Location: " . $_SERVER['PHP_SELF'] . "?group=" . urlencode($groupName));
                     exit();
                 }
+            } 
+            // ==========================================
+            // EXCEL / CSV PROCESSING (Purana Code)
+            // ==========================================
+            else {
+                // For CSV files
+                if ($fileExt === 'csv') {
+                    try {
+                        $handle = fopen($filePath, 'r');
+                        if ($handle !== false) {
+                            $rowCount = 0;
+                            $conn->autocommit(FALSE);
+                            
+                            while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+                                $rowCount++;
+                                if ($rowCount === 1) continue;
+                                
+                                $userName = isset($row[1]) ? trim($row[1]) : '';
+                                $mobile = isset($row[7]) ? trim($row[7]) : '';
+                                $designation = isset($row[4]) ? trim($row[4]) : '';
+                                $email = isset($row[6]) ? trim($row[6]) : '';
+                                
+                                if (empty($userName) || empty($mobile)) { $errorCount++; continue; }
+                                
+                                $mobile = preg_replace('/[^0-9]/', '', $mobile);
+                                if (strlen($mobile) < 10) { $errorCount++; continue; }
+                                if (strlen($mobile) > 10) { $mobile = substr($mobile, -10); }
+                                
+                                if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                                    $cleanName = preg_replace('/[^a-zA-Z0-9\s]/', '', $userName);
+                                    $email = strtolower(str_replace(' ', '.', $cleanName)) . '@example.com';
+                                    $email = substr($email, 0, 50);
+                                }
+                                
+                                if (isset($row[2]) && !empty(trim($row[2]))) {
+                                    $piNumber = trim($row[2]);
+                                    $designation .= !empty($designation) ? " (PI#: $piNumber)" : "PI#: $piNumber";
+                                }
+                                if (isset($row[3]) && !empty(trim($row[3]))) {
+                                    $bps = trim($row[3]);
+                                    $designation .= !empty($designation) ? " BPS-$bps" : "BPS-$bps";
+                                }
+                                
+                                try {
+                                    $stmt = $conn->prepare("INSERT INTO users (group_id, name, designation, mobile, email) VALUES (?, ?, ?, ?, ?)");
+                                    $stmt->bind_param("issss", $groupId, $userName, $designation, $mobile, $email);
+                                    if ($stmt->execute()) {
+                                        $successCount++;
+                                        if ($successCount <= 20) $importedUsers[] = $userName;
+                                    } else { $errorCount++; }
+                                } catch (Exception $e) { $errorCount++; }
+                            }
+                            fclose($handle);
+                            $conn->commit();
+                            $conn->autocommit(TRUE);
+                        }
+                    } catch (Exception $e) {
+                        $conn->rollback();
+                        $conn->autocommit(TRUE);
+                        $_SESSION['error'] = "Error processing CSV file: " . $e->getMessage();
+                        ob_end_clean();
+                        header("Location: " . $_SERVER['PHP_SELF'] . "?group=" . urlencode($groupName));
+                        exit();
+                    }
+                } 
+                // For Excel files
+                else {
+                    try {
+                        $reader = IOFactory::createReader(ucfirst($fileExt));
+                        $reader->setReadDataOnly(true);
+                        $reader->setReadEmptyCells(false);
+                        
+                        if ($fileExt === 'xlsx') {
+                            $chunkFilter = new ChunkReadFilter();
+                            $reader->setReadFilter($chunkFilter);
+                            $chunkSize = 500;
+                            $chunkFilter->setRows(0, $chunkSize);
+                            $conn->autocommit(FALSE);
+                            
+                            for ($startRow = 1; $startRow <= 1500; $startRow += $chunkSize) {
+                                $chunkFilter->setRows($startRow, $chunkSize);
+                                $spreadsheet = $reader->load($filePath);
+                                $sheet = $spreadsheet->getActiveSheet();
+                                $rows = $sheet->toArray();
+                                
+                                if (empty($rows)) break;
+                                
+                                foreach ($rows as $index => $row) {
+                                    $actualRow = $startRow + $index;
+                                    if ($actualRow === 1) continue;
+                                    
+                                    $userName = isset($row[1]) ? trim($row[1]) : '';
+                                    $mobile = isset($row[7]) ? trim($row[7]) : '';
+                                    $designation = isset($row[4]) ? trim($row[4]) : '';
+                                    $email = isset($row[6]) ? trim($row[6]) : '';
+                                    
+                                    if (empty($userName) || empty($mobile)) { $errorCount++; continue; }
+                                    
+                                    $mobile = preg_replace('/[^0-9]/', '', $mobile);
+                                    if (strlen($mobile) < 10) { $errorCount++; continue; }
+                                    if (strlen($mobile) > 10) { $mobile = substr($mobile, -10); }
+                                    
+                                    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                                        $cleanName = preg_replace('/[^a-zA-Z0-9\s]/', '', $userName);
+                                        $email = strtolower(str_replace(' ', '.', $cleanName)) . '@example.com';
+                                        $email = substr($email, 0, 50);
+                                    }
+                                    
+                                    if (isset($row[2]) && !empty(trim($row[2]))) {
+                                        $piNumber = trim($row[2]);
+                                        $designation .= !empty($designation) ? " (PI#: $piNumber)" : "PI#: $piNumber";
+                                    }
+                                    if (isset($row[3]) && !empty(trim($row[3]))) {
+                                        $bps = trim($row[3]);
+                                        $designation .= !empty($designation) ? " BPS-$bps" : "BPS-$bps";
+                                    }
+                                    
+                                    try {
+                                        $stmt = $conn->prepare("INSERT INTO users (group_id, name, designation, mobile, email) VALUES (?, ?, ?, ?, ?)");
+                                        $stmt->bind_param("issss", $groupId, $userName, $designation, $mobile, $email);
+                                        if ($stmt->execute()) {
+                                            $successCount++;
+                                            if ($successCount <= 20) $importedUsers[] = $userName;
+                                        } else { $errorCount++; }
+                                    } catch (Exception $e) { $errorCount++; }
+                                }
+                                unset($spreadsheet, $sheet, $rows);
+                            }
+                            $conn->commit();
+                            $conn->autocommit(TRUE);
+                        } else {
+                            // XLS processing
+                            $spreadsheet = $reader->load($filePath);
+                            $sheet = $spreadsheet->getActiveSheet();
+                            $rows = $sheet->toArray();
+                            $conn->autocommit(FALSE);
+                            
+                            foreach ($rows as $index => $row) {
+                                if ($index === 0) continue;
+                                
+                                $userName = isset($row[1]) ? trim($row[1]) : '';
+                                $mobile = isset($row[7]) ? trim($row[7]) : '';
+                                $designation = isset($row[4]) ? trim($row[4]) : '';
+                                $email = isset($row[6]) ? trim($row[6]) : '';
+                                
+                                if (empty($userName) || empty($mobile)) { $errorCount++; continue; }
+                                
+                                $mobile = preg_replace('/[^0-9]/', '', $mobile);
+                                if (strlen($mobile) < 10) { $errorCount++; continue; }
+                                if (strlen($mobile) > 10) { $mobile = substr($mobile, -10); }
+                                
+                                if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                                    $cleanName = preg_replace('/[^a-zA-Z0-9\s]/', '', $userName);
+                                    $email = strtolower(str_replace(' ', '.', $cleanName)) . '@example.com';
+                                    $email = substr($email, 0, 50);
+                                }
+                                
+                                if (isset($row[2]) && !empty(trim($row[2]))) {
+                                    $piNumber = trim($row[2]);
+                                    $designation .= !empty($designation) ? " (PI#: $piNumber)" : "PI#: $piNumber";
+                                }
+                                if (isset($row[3]) && !empty(trim($row[3]))) {
+                                    $bps = trim($row[3]);
+                                    $designation .= !empty($designation) ? " BPS-$bps" : "BPS-$bps";
+                                }
+                                
+                                try {
+                                    $stmt = $conn->prepare("INSERT INTO users (group_id, name, designation, mobile, email) VALUES (?, ?, ?, ?, ?)");
+                                    $stmt->bind_param("issss", $groupId, $userName, $designation, $mobile, $email);
+                                    if ($stmt->execute()) {
+                                        $successCount++;
+                                        if ($successCount <= 20) $importedUsers[] = $userName;
+                                    } else { $errorCount++; }
+                                } catch (Exception $e) { $errorCount++; }
+                            }
+                            $conn->commit();
+                            $conn->autocommit(TRUE);
+                        }
+                    } catch (Exception $e) {
+                        if (isset($conn) && method_exists($conn, 'rollback')) {
+                            $conn->rollback();
+                            $conn->autocommit(TRUE);
+                        }
+                        $_SESSION['error'] = "Error reading Excel file: " . $e->getMessage();
+                        ob_end_clean();
+                        header("Location: " . $_SERVER['PHP_SELF'] . "?group=" . urlencode($groupName));
+                        exit();
+                    }
+                }
             }
             
+            // Success / Error Messages for both PDF and Excel
             if ($successCount > 0) {
                 $message = "✅ Successfully imported $successCount users from file!";
                 if (count($importedUsers) > 0) {
@@ -529,15 +459,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $_SESSION['message'] = $message;
             } else {
-                $_SESSION['error'] = "No valid users found in the file or all rows failed to import. Please check:<br>
-                1. File format should have columns: Sr#, NAME, PI#, BPS, DESIGN, DEPTT, CNIC, CONTACT<br>
-                2. Mobile numbers must be valid Pakistan numbers (10+ digits)<br>
-                3. At minimum, NAME and CONTACT columns must have data<br>
-                4. File should not be password-protected";
+                $_SESSION['error'] = "No valid users found in the file. Please check file format.<br>For PDF, format should be: <code>SrNo Name MobileNo</code>";
             }
             
         } else {
-            // Handle file upload errors
             $uploadError = $_FILES['excel_file']['error'] ?? 'Unknown error';
             $errorMessages = [
                 0 => 'There is no error, the file uploaded with success',
@@ -549,11 +474,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 7 => 'Failed to write file to disk.',
                 8 => 'A PHP extension stopped the file upload.',
             ];
-            
             $_SESSION['error'] = "File upload error: " . ($errorMessages[$uploadError] ?? 'Unknown error');
         }
 
-        ob_end_clean(); // Clear buffer before redirect
+        ob_end_clean();
         header("Location: " . $_SERVER['PHP_SELF'] . "?group=" . urlencode($groupName));
         exit();
     }
@@ -569,7 +493,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'email' => trim($_POST['email'])
         ];
         
-        // Validation
         $errors = [];
         if (empty($userData['name'])) $errors[] = "Name is required";
         if (empty($userData['email'])) $errors[] = "Email is required";
@@ -577,18 +500,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = "Invalid email format";
         }
         
-        // Pakistan mobile validation for manual entry
         if (!empty($userData['mobile'])) {
             $mobile = preg_replace('/[^0-9]/', '', $userData['mobile']);
             if (strlen($mobile) < 10) {
                 $errors[] = "Invalid mobile number (must be at least 10 digits)";
             } else {
-                $userData['mobile'] = substr($mobile, -10); // Keep only last 10 digits
+                $userData['mobile'] = substr($mobile, -10); 
             }
         }
         
         if (empty($errors)) {
-            // Get group ID
             $stmt = $conn->prepare("SELECT id FROM groups WHERE name = ?");
             $stmt->bind_param("s", $groupName);
             $stmt->execute();
@@ -598,7 +519,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $group = $result->fetch_assoc();
                 $groupId = $group['id'];
                 
-                // Insert user
                 $stmt = $conn->prepare("INSERT INTO users (group_id, name, designation, mobile, email) VALUES (?, ?, ?, ?, ?)");
                 $stmt->bind_param("issss", $groupId, $userData['name'], $userData['designation'], $userData['mobile'], $userData['email']);
                 
@@ -614,7 +534,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $_SESSION['error'] = implode("<br>", $errors);
         }
-        ob_end_clean(); // Clear buffer before redirect
+        ob_end_clean(); 
         header("Location: ".$_SERVER['PHP_SELF']."?group=".urlencode($groupName));
         exit();
     } 
@@ -630,7 +550,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $_SESSION['error'] = "Error deleting user!";
         }
-        ob_end_clean(); // Clear buffer before redirect
+        ob_end_clean(); 
         header("Location: ".$_SERVER['PHP_SELF']."?group=".urlencode($groupName));
         exit();
     }
@@ -647,7 +567,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $_SESSION['error'] = "Error deleting group!";
         }
-        ob_end_clean(); // Clear buffer before redirect
+        ob_end_clean(); 
         header("Location: ".$_SERVER['PHP_SELF']);
         exit();
     }
@@ -663,7 +583,6 @@ $showStep1 = !isset($_POST['group']) && !isset($_GET['group']);
 $showStep2 = isset($_POST['group']) || isset($_GET['group']);
 $currentGroup = $_POST['group'] ?? ($_GET['group'] ?? '');
 
-// Get all groups from database for display
 $groups = [];
 $result = $conn->query("SELECT name FROM groups ORDER BY name");
 if ($result) {
@@ -674,7 +593,6 @@ if ($result) {
     $groups = $_SESSION['groups'];
 }
 
-// Get users for current group if selected
 $groupUsers = [];
 if ($showStep2 && !empty($currentGroup)) {
     $stmt = $conn->prepare("SELECT u.id, u.name, u.designation, u.mobile, u.email 
@@ -697,7 +615,6 @@ if ($showStep2 && !empty($currentGroup)) {
     }
 }
 
-// Clear the output buffer and start fresh for HTML output
 ob_end_clean();
 ?>
 <!DOCTYPE html>
@@ -729,11 +646,7 @@ ob_end_clean();
             --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Poppins', sans-serif;
@@ -745,7 +658,6 @@ ob_end_clean();
             overflow-x: hidden;
         }
         
-        /* Animated background elements */
         .bg-elements {
             position: fixed;
             top: 0;
@@ -763,37 +675,10 @@ ob_end_clean();
             animation: float 15s infinite linear;
         }
         
-        .bg-element:nth-child(1) {
-            width: 300px;
-            height: 300px;
-            top: 10%;
-            left: 5%;
-            animation-delay: 0s;
-        }
-        
-        .bg-element:nth-child(2) {
-            width: 150px;
-            height: 150px;
-            top: 60%;
-            left: 15%;
-            animation-delay: 2s;
-        }
-        
-        .bg-element:nth-child(3) {
-            width: 200px;
-            height: 200px;
-            top: 30%;
-            right: 10%;
-            animation-delay: 4s;
-        }
-        
-        .bg-element:nth-child(4) {
-            width: 250px;
-            height: 250px;
-            bottom: 10%;
-            right: 15%;
-            animation-delay: 6s;
-        }
+        .bg-element:nth-child(1) { width: 300px; height: 300px; top: 10%; left: 5%; animation-delay: 0s; }
+        .bg-element:nth-child(2) { width: 150px; height: 150px; top: 60%; left: 15%; animation-delay: 2s; }
+        .bg-element:nth-child(3) { width: 200px; height: 200px; top: 30%; right: 10%; animation-delay: 4s; }
+        .bg-element:nth-child(4) { width: 250px; height: 250px; bottom: 10%; right: 15%; animation-delay: 6s; }
         
         @keyframes float {
             0% { transform: translateY(0) rotate(0deg); }
@@ -801,13 +686,7 @@ ob_end_clean();
             100% { transform: translateY(0) rotate(360deg); }
         }
         
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 2rem;
-            position: relative;
-            z-index: 1;
-        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 2rem; position: relative; z-index: 1; }
         
         .card {
             background: rgba(26, 26, 46, 0.8);
@@ -826,11 +705,7 @@ ob_end_clean();
             border-color: rgba(58, 134, 255, 0.3);
         }
         
-        .header {
-            text-align: center;
-            margin-bottom: 3rem;
-            position: relative;
-        }
+        .header { text-align: center; margin-bottom: 3rem; position: relative; }
         
         .header h1 {
             color: white;
@@ -843,12 +718,7 @@ ob_end_clean();
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
         
-        .header p {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1.1rem;
-            max-width: 600px;
-            margin: 0 auto;
-        }
+        .header p { color: rgba(255, 255, 255, 0.8); font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
         
         .header::after {
             content: '';
@@ -860,10 +730,7 @@ ob_end_clean();
             border-radius: 2px;
         }
         
-        .form-group {
-            margin-bottom: 1.75rem;
-            position: relative;
-        }
+        .form-group { margin-bottom: 1.75rem; position: relative; }
         
         .form-group label {
             display: block;
@@ -892,9 +759,7 @@ ob_end_clean();
             background: rgba(255, 255, 255, 0.08);
         }
         
-        .form-control::placeholder {
-            color: rgba(255, 255, 255, 0.4);
-        }
+        .form-control::placeholder { color: rgba(255, 255, 255, 0.4); }
         
         .btn {
             display: inline-flex;
@@ -913,45 +778,14 @@ ob_end_clean();
             letter-spacing: 0.5px;
         }
         
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-        }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+        .btn-primary:hover { background: linear-gradient(135deg, var(--primary-dark), var(--primary)); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(58, 134, 255, 0.3); }
+        .btn-secondary { background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2); }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); }
+        .btn-danger { background: linear-gradient(135deg, var(--danger), #e5177b); color: white; }
+        .btn-danger:hover { background: linear-gradient(135deg, #e5177b, var(--danger)); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255, 45, 117, 0.3); }
         
-        .btn-primary:hover {
-            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(58, 134, 255, 0.3);
-        }
-        
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, var(--danger), #e5177b);
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background: linear-gradient(135deg, #e5177b, var(--danger));
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(255, 45, 117, 0.3);
-        }
-        
-        .button-group {
-            display: flex;
-            gap: 1.25rem;
-            margin-top: 2rem;
-        }
+        .button-group { display: flex; gap: 1.25rem; margin-top: 2rem; }
         
         .badge {
             display: inline-flex;
@@ -966,26 +800,11 @@ ob_end_clean();
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
         
-        .badge:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .badge i {
-            margin-right: 0.5rem;
-        }
-        
-        .badge-alpha {
-            background: linear-gradient(135deg, #3a86ff, #2667cc);
-        }
-        
-        .badge-numeric {
-            background: linear-gradient(135deg, #8338ec, #6a2bc2);
-        }
-        
-        .badge-mixed {
-            background: linear-gradient(135deg, #ff2d75, #e5177b);
-        }
+        .badge:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2); }
+        .badge i { margin-right: 0.5rem; }
+        .badge-alpha { background: linear-gradient(135deg, #3a86ff, #2667cc); }
+        .badge-numeric { background: linear-gradient(135deg, #8338ec, #6a2bc2); }
+        .badge-mixed { background: linear-gradient(135deg, #ff2d75, #e5177b); }
         
         .alert {
             padding: 1.25rem;
@@ -998,21 +817,9 @@ ob_end_clean();
             animation: fadeIn 0.5s ease-out;
         }
         
-        .alert-success {
-            background: rgba(76, 201, 240, 0.1);
-            border-left-color: var(--success);
-            color: rgba(255, 255, 255, 0.9);
-        }
-        
-        .alert-error {
-            background: rgba(255, 45, 117, 0.1);
-            border-left-color: var(--danger);
-            color: rgba(255, 255, 255, 0.9);
-        }
-        
-        .alert i {
-            font-size: 1.5rem;
-        }
+        .alert-success { background: rgba(76, 201, 240, 0.1); border-left-color: var(--success); color: rgba(255, 255, 255, 0.9); }
+        .alert-error { background: rgba(255, 45, 117, 0.1); border-left-color: var(--danger); color: rgba(255, 255, 255, 0.9); }
+        .alert i { font-size: 1.5rem; }
         
         .user-table {
             width: 100%;
@@ -1024,59 +831,18 @@ ob_end_clean();
             overflow: hidden;
         }
         
-        .user-table th, .user-table td {
-            padding: 1.25rem;
-            text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
+        .user-table th, .user-table td { padding: 1.25rem; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .user-table th { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.9rem; }
+        .user-table tr:nth-child(even) { background: rgba(255, 255, 255, 0.02); }
+        .user-table tr:hover { background: rgba(58, 134, 255, 0.05); }
+        .user-table tr:last-child td { border-bottom: none; }
         
-        .user-table th {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 0.9rem;
-        }
+        .step { display: none; animation: fadeIn 0.6s ease-out; }
+        .step.active { display: block; }
         
-        .user-table tr:nth-child(even) {
-            background: rgba(255, 255, 255, 0.02);
-        }
-        
-        .user-table tr:hover {
-            background: rgba(58, 134, 255, 0.05);
-        }
-        
-        .user-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .step {
-            display: none;
-            animation: fadeIn 0.6s ease-out;
-        }
-        
-        .step.active {
-            display: block;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 3rem 2rem;
-            color: rgba(255, 255, 255, 0.6);
-        }
-        
-        .empty-state i {
-            font-size: 3.5rem;
-            color: rgba(255, 255, 255, 0.1);
-            margin-bottom: 1.5rem;
-        }
-        
-        .empty-state p {
-            font-size: 1.1rem;
-            max-width: 400px;
-            margin: 0 auto;
-        }
+        .empty-state { text-align: center; padding: 3rem 2rem; color: rgba(255, 255, 255, 0.6); }
+        .empty-state i { font-size: 3.5rem; color: rgba(255, 255, 255, 0.1); margin-bottom: 1.5rem; }
+        .empty-state p { font-size: 1.1rem; max-width: 400px; margin: 0 auto; }
         
         .fab {
             position: fixed;
@@ -1099,129 +865,35 @@ ob_end_clean();
             text-decoration: none;
         }
         
-        .fab:hover {
-            transform: scale(1.1);
-            box-shadow: 0 8px 25px rgba(58, 134, 255, 0.5);
-            animation: none;
-        }
+        .fab:hover { transform: scale(1.1); box-shadow: 0 8px 25px rgba(58, 134, 255, 0.5); animation: none; }
         
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        
-        /* Security indicators */
-        .security-indicator {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(to right, #4cc9f0, #3a86ff, #8338ec);
-            z-index: 1000;
-        }
-        
-        .security-badge {
-            position: fixed;
-            bottom: 1rem;
-            left: 1rem;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            font-size: 0.8rem;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            z-index: 100;
-        }
-        
-        .security-badge i {
-            color: #4cc9f0;
-        }
+        .security-indicator { position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(to right, #4cc9f0, #3a86ff, #8338ec); z-index: 1000; }
+        .security-badge { position: fixed; bottom: 1rem; left: 1rem; background: rgba(0, 0, 0, 0.3); padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.8rem; color: white; display: flex; align-items: center; gap: 0.5rem; z-index: 100; }
+        .security-badge i { color: #4cc9f0; }
         
         @media (max-width: 768px) {
-            .container {
-                padding: 1.5rem;
-            }
-            
-            .card {
-                padding: 1.75rem;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .button-group {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-            }
-            
-            .user-table th, .user-table td {
-                padding: 0.9rem;
-                font-size: 0.9rem;
-            }
+            .container { padding: 1.5rem; }
+            .card { padding: 1.75rem; }
+            .header h1 { font-size: 2rem; }
+            .button-group { flex-direction: column; }
+            .btn { width: 100%; }
+            .user-table th, .user-table td { padding: 0.9rem; font-size: 0.9rem; }
         }
-        .security-badge {
-      font-size: 22px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .typing-text {
-      border-right: 2px solid #ffcc00;
-      white-space: nowrap;
-      overflow: hidden;
-      display: inline-block;
-      width: 0;
-      animation: blink 0.8s infinite;
-    }
-
-    @keyframes blink {
-      50% { border-color: transparent; }
-    }
-      h1 {
-      font-size: 28px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      
-      
-      justify-content: center;   /* horizontally center */
-      align-items: center;       /* vertically center */
-    
-      text-align: center;    
-    }
-
-    #typing {
-      border-right: 2px solid #ffcc00;
-      white-space: nowrap;
-      overflow: hidden;
-      display: inline-block;
-      animation: blink 0.8s infinite;
-    }
-
-    @keyframes blink {
-      50% { border-color: transparent; }
-    }
+        
+        .security-badge { font-size: 22px; display: flex; align-items: center; gap: 10px; }
+        .typing-text { border-right: 2px solid #ffcc00; white-space: nowrap; overflow: hidden; display: inline-block; width: 0; animation: blink 0.8s infinite; }
+        @keyframes blink { 50% { border-color: transparent; } }
+        
+        h1 { font-size: 28px; display: flex; align-items: center; gap: 10px; justify-content: center; align-items: center; text-align: center; }
+        #typing { border-right: 2px solid #ffcc00; white-space: nowrap; overflow: hidden; display: inline-block; animation: blink 0.8s infinite; }
     </style>
 </head>
 <body>
-    <!-- Security indicator bar -->
     <div class="security-indicator"></div>
     
-    <!-- Animated background elements -->
     <div class="bg-elements">
         <div class="bg-element"></div>
         <div class="bg-element"></div>
@@ -1241,7 +913,6 @@ ob_end_clean();
             </a>
         </div>
         
-        <!-- Display messages -->
         <?php if (isset($_SESSION['message'])): ?>
             <div class="alert alert-success">
                 <i class="fas fa-check-circle"></i> <?php echo $_SESSION['message']; unset($_SESSION['message']); ?>
@@ -1254,7 +925,6 @@ ob_end_clean();
             </div>
         <?php endif; ?>
         
-        <!-- Step 1: Add Group -->
         <div id="step1" class="step <?php echo $showStep1 ? 'active' : ''; ?>">
             <div class="card">
                 <h2><i class="fas fa-folder-plus"></i> Create New Group</h2>
@@ -1303,7 +973,6 @@ ob_end_clean();
             </div>
         </div>
         
-        <!-- Step 2: Add Users -->
         <div id="step2" class="step <?php echo $showStep2 ? 'active' : ''; ?>">
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
@@ -1372,21 +1041,16 @@ ob_end_clean();
                     </div>
                 </form>
                 
-                <!-- Excel Upload -->
                 <form method="post" enctype="multipart/form-data" style="margin-top:2rem;">
                     <input type="hidden" name="group" value="<?php echo htmlspecialchars($currentGroup); ?>">
                     <div class="form-group">
-                        <label for="excel_file"><i class="fas fa-file-excel"></i> Upload Excel/CSV File (Pakistan Government Format)</label>
+                        <label for="excel_file"><i class="fas fa-file-upload"></i> Upload File (Excel, CSV, or PDF)</label>
                         <input type="file" class="form-control" name="excel_file" id="excel_file" 
-                               accept=".xlsx,.xls,.csv" required>
+                               accept=".xlsx,.xls,.csv,.pdf" required>
                         <small class="text-muted">
-                            <strong>For Pakistan government data format:</strong><br>
-                            1. Required columns: NAME (B), CONTACT (H)<br>
-                            2. Optional: PI# (C), BPS (D), DESIGN (E), DEPTT (F), CNIC (G)<br>
-                            3. Mobile numbers will be auto-cleaned (03XXXXXXXXX)<br>
-                            4. Emails auto-generated from names if not provided<br>
-                            5. <strong>Save as CSV format</strong> for fastest import<br>
-                            6. Remove password protection if any<br>
+                            <strong>Supported Formats:</strong><br>
+                            <strong>PDF:</strong> Format should be <code>Sr# Name Mobile</code> (e.g., 730 Ghulam Shabbir 3325559517)<br>
+                            <strong>Excel/CSV:</strong> Required columns: NAME (B), CONTACT (H).<br>
                         </small>
                     </div>
                     <div class="button-group">
@@ -1400,7 +1064,6 @@ ob_end_clean();
                     </div>
                 </form>
                 
-                <!-- Display users in this group -->
                 <div class="user-list" style="margin-top: 3rem;">
                     <h3><i class="fas fa-users-cog"></i> Group Members (<?php echo count($groupUsers); ?> users)</h3>
                     <p class="text-muted" style="margin-bottom: 1.5rem;">Manage existing users in this group</p>
@@ -1495,7 +1158,6 @@ ob_end_clean();
 
         typeEffect();
         
-        // Add floating animation to cards when they come into view
         document.addEventListener('DOMContentLoaded', function() {
             const cards = document.querySelectorAll('.card');
             
@@ -1516,7 +1178,6 @@ ob_end_clean();
             });
         });
         
-        // File upload size warning
         document.getElementById('excel_file').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {

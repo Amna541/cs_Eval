@@ -56,7 +56,6 @@ function getTrackingAnalytics($conn, $groupName = null) {
         while ($row = $result->fetch_assoc()) {
             $analytics['total_clicks'] += $row['visits'];
             
-            // Track click patterns by URL
             if (!isset($analytics['click_patterns'][$row['url']])) {
                 $analytics['click_patterns'][$row['url']] = [
                     'visits' => 0,
@@ -66,7 +65,6 @@ function getTrackingAnalytics($conn, $groupName = null) {
             $analytics['click_patterns'][$row['url']]['visits'] += $row['visits'];
             $analytics['click_patterns'][$row['url']]['unique_visitors'] += $row['unique_visitors'];
             
-            // Track devices
             if (!empty($row['os'])) {
                 if (!isset($analytics['devices'][$row['os']])) {
                     $analytics['devices'][$row['os']] = 0;
@@ -74,7 +72,6 @@ function getTrackingAnalytics($conn, $groupName = null) {
                 $analytics['devices'][$row['os']] += $row['visits'];
             }
             
-            // Track locations using stored real data from database
             if (!empty($row['latitude']) && !empty($row['longitude']) && $row['latitude'] != 0 && $row['longitude'] != 0) {
                 $locationKey = $row['city'] . ', ' . $row['country'];
                 
@@ -107,7 +104,6 @@ function getTrackingAnalytics($conn, $groupName = null) {
                 ];
             }
             
-            // Track returning visitors
             if ($row['visits'] > 1) {
                 $analytics['returning_visitors'] += $row['visits'] - 1;
             }
@@ -117,7 +113,6 @@ function getTrackingAnalytics($conn, $groupName = null) {
     return $analytics;
 }
 
-// Function to get all groups from database
 function getAllGroups($conn) {
     $groups = [];
     $query = "SELECT name FROM user_management.groups ORDER BY name";
@@ -130,18 +125,15 @@ function getAllGroups($conn) {
     return $groups;
 }
 
-// Function to add a new group to database
 function addGroup($conn, $groupName) {
     $stmt = $conn->prepare("INSERT INTO user_management.groups (name) VALUES (?)");
     $stmt->bind_param("s", $groupName);
     return $stmt->execute();
 }
 
-// Function to get users by group from database
 function getUsersByGroup($conn, $groupName) {
     $users = [];
     
-    // Try the most likely schema first
     $query = "SELECT u.* FROM user_management.users u 
               JOIN user_management.groups g ON u.group_id = g.id 
               WHERE g.name = ?";
@@ -149,7 +141,6 @@ function getUsersByGroup($conn, $groupName) {
     $stmt = $conn->prepare($query);
     
     if (!$stmt) {
-        // Fallback to alternative schema if first attempt fails
         $query = "SELECT * FROM user_management.users WHERE group_name = ?";
         $stmt = $conn->prepare($query);
         
@@ -178,18 +169,14 @@ function getUsersByGroup($conn, $groupName) {
     return $users;
 }
 
-// Always load groups from database first
 $groups = getAllGroups($conn);
-// Store in session for later use
 $_SESSION['groups'] = $groups;
 
-// Handle form submission to add new group
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['new_group'])) {
     $newGroup = trim($_POST['new_group']);
     if (!empty($newGroup)) {
         if (addGroup($conn, $newGroup)) {
             $_SESSION['message'] = "Group '$newGroup' added successfully!";
-            // Refresh groups from database after adding new one
             $_SESSION['groups'] = getAllGroups($conn);
         } else {
             $_SESSION['error'] = "Failed to add group or group already exists.";
@@ -199,7 +186,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['new_group'])) {
     }
 }
 
-// Define websites array with {number} placeholder
 $ngrok = "https://wolf-moaning-blouse.ngrok-free.dev";
 $websites = [
     "Easypaisa" => "https://wolf-moaning-blouse.ngrok-free.dev/easypaisa/easypaisa.php?number={number}",
@@ -211,23 +197,20 @@ $websites = [
     "War Zone" => "https://wolf-moaning-blouse.ngrok-free.dev/warZoneCommand/index.php?number={number}",
     "Hackathon" => "https://wolf-moaning-blouse.ngrok-free.dev/hackathon/index.html?number={number}#about",
     "Eshop2" => "https://wolf-moaning-blouse.ngrok-free.dev/eshop2?number={number}",
-    "Stylo Website" => " https://wolf-moaning-blouse.ngrok-free.dev/stylo_website/welcome_stylo.php?number={number}"
+    "Stylo Website" => " https://wolf-moaning-blouse.ngrok-free.dev/stylo_website/welcome_stylo.php?number={number}",
+    "fwo Website" => " https://wolf-moaning-blouse.ngrok-free.dev/fwo.php?number={number}",
 ];
 
-// Handle group selection
 $selectedGroup = '';
 $groupUsers = [];
 $analyticsData = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['group'])) {
     $selectedGroup = $_POST['group'];
-    // Get users from database instead of session
     $groupUsers = getUsersByGroup($conn, $selectedGroup);
-    // Get analytics for selected group
     $analyticsData = getTrackingAnalytics($conn, $selectedGroup);
 }
 
-// Function to generate contact links
 function generateContactLinks($user) {
     $links = [];
     
@@ -261,17 +244,14 @@ function generateContactLinks($user) {
     return implode(' ', $links);
 }
 
-// Function to generate website dropdown
 function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
     if (empty($user['mobile'])) {
         return '<span class="text-muted">N/A</span>';
     }
     
-    // Clean the number and prepare for international format
     $cleanedNumber = preg_replace('/[^0-9]/', '', $user['mobile']);
     $encodedNumber = encodeNumber($cleanedNumber);
     
-    // If number starts with 0, replace with 92 (Pakistan country code)
     if (substr($cleanedNumber, 0, 1) === '0') {
         $cleanedNumber = '92' . substr($cleanedNumber, 1);
     }
@@ -302,10 +282,8 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Add Leaflet for Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Heatmap Plugin -->
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <style>
         :root {
@@ -327,11 +305,7 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
             --transition-fast: all 0.15s ease;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         .analytics-section {
             margin-top: 2rem;
@@ -390,20 +364,9 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
             color: white;
         }
         
-        .stat-content {
-            flex: 1;
-        }
-        
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--dark);
-        }
-        
-        .stat-label {
-            font-size: 0.9rem;
-            color: #666;
-        }
+        .stat-content { flex: 1; }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--dark); }
+        .stat-label { font-size: 0.9rem; color: #666; }
         
         .location-badge {
             display: inline-block;
@@ -416,7 +379,6 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
             font-size: 0.8rem;
         }
         
-        /* Map Styles */
         .map-container {
             height: 400px;
             width: 100%;
@@ -442,9 +404,7 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
             border-bottom: 1px solid #eee;
         }
         
-        .location-row:last-child {
-            border-bottom: none;
-        }
+        .location-row:last-child { border-bottom: none; }
         
         .location-icon {
             width: 40px;
@@ -452,20 +412,9 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
             font-size: 1.2rem;
         }
         
-        .location-details {
-            flex: 1;
-        }
-        
-        .location-city {
-            font-weight: 600;
-            color: var(--dark);
-        }
-        
-        .location-coords {
-            font-size: 0.85rem;
-            color: #666;
-            font-family: monospace;
-        }
+        .location-details { flex: 1; }
+        .location-city { font-weight: 600; color: var(--dark); }
+        .location-coords { font-size: 0.85rem; color: #666; font-family: monospace; }
         
         .location-count {
             background: var(--primary);
@@ -490,7 +439,6 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
             animation: fadeIn 0.6s ease-out;
         }
 
-        /* Header Styles */
         .header {
             text-align: center;
             margin: 2rem 0 3rem;
@@ -518,7 +466,6 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
             margin: 0 auto;
         }
 
-        /* Card Styles */
         .card {
             background: white;
             border-radius: var(--border-radius);
@@ -536,10 +483,7 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
             box-shadow: var(--box-shadow-lg);
         }
 
-        /* Form Styles */
-        .form-group {
-            margin-bottom: 2rem;
-        }
+        .form-group { margin-bottom: 2rem; }
 
         .form-group label {
             display: block;
@@ -565,7 +509,6 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
             box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
         }
 
-        /* Button Styles */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -602,7 +545,6 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
             transform: translateY(-3px);
         }
 
-        /* Table Styles */
         .user-table {
             width: 100%;
             border-collapse: separate;
@@ -628,19 +570,10 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
             font-size: 0.9rem;
         }
 
-        .user-table tr:nth-child(even) {
-            background-color: var(--lighter);
-        }
+        .user-table tr:nth-child(even) { background-color: var(--lighter); }
+        .user-table tr:hover { background-color: #e6edff; }
+        .user-table tr:last-child td { border-bottom: none; }
 
-        .user-table tr:hover {
-            background-color: #e6edff;
-        }
-
-        .user-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        /* Contact Links */
         .contact-links {
             display: flex;
             gap: 1rem;
@@ -667,7 +600,6 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
             transform: scale(1.15);
         }
 
-        /* Website Dropdown */
         .website-dropdown {
             min-width: 180px;
             position: relative;
@@ -688,7 +620,6 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
             box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
         }
 
-        /* Badges */
         .badge {
             display: inline-block;
             padding: 0.4rem 0.9rem;
@@ -699,19 +630,10 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
             letter-spacing: 0.5px;
         }
 
-        .badge-alpha {
-            background-color: #3a86ff;
-        }
+        .badge-alpha { background-color: #3a86ff; }
+        .badge-numeric { background-color: #8338ec; }
+        .badge-mixed { background: linear-gradient(135deg, #ff006e 0%, #ff6b6b 100%); }
 
-        .badge-numeric {
-            background-color: #8338ec;
-        }
-
-        .badge-mixed {
-            background: linear-gradient(135deg, #ff006e 0%, #ff6b6b 100%);
-        }
-
-        /* Empty State */
         .empty-state {
             text-align: center;
             padding: 3rem 2rem;
@@ -731,7 +653,6 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
             margin: 0 auto;
         }
 
-        /* Floating Action Button */
         .fab {
             position: fixed;
             bottom: 2rem;
@@ -758,32 +679,16 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
             animation: none;
         }
 
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         @keyframes fadeInUp {
-            from { 
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to { 
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes slideDown {
-            from { 
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to { 
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes pulse {
@@ -792,7 +697,6 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
             100% { transform: scale(1); }
         }
 
-        /* Loading Animation */
         .loading-spinner {
             display: inline-block;
             width: 20px;
@@ -803,91 +707,32 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
             animation: spin 1s ease-in-out infinite;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Responsive Design */
         @media (max-width: 992px) {
-            .container {
-                padding: 0 1.25rem;
-            }
-            
-            .header {
-                padding: 2rem 1rem;
-            }
-            
-            .header h1 {
-                font-size: 2.2rem;
-            }
+            .container { padding: 0 1.25rem; }
+            .header { padding: 2rem 1rem; }
+            .header h1 { font-size: 2.2rem; }
         }
 
         @media (max-width: 768px) {
-            .container {
-                padding: 0 1rem;
-                
-            }
-            
-            .card {
-                padding: 1.75rem;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .user-table th, .user-table td {
-                padding: 0.9rem;
-                font-size: 0.9rem;
-            }
-            
-            .contact-links {
-                gap: 0.6rem;
-            }
-            
-            .contact-link {
-                font-size: 1.2rem;
-                width: 38px;
-                height: 38px;
-            }
-            
-            .fab {
-                width: 50px;
-                height: 50px;
-                font-size: 1.3rem;
-            }
-            
-            .map-container {
-                height: 300px;
-            }
+            .container { padding: 0 1rem; }
+            .card { padding: 1.75rem; }
+            .header h1 { font-size: 2rem; }
+            .user-table th, .user-table td { padding: 0.9rem; font-size: 0.9rem; }
+            .contact-links { gap: 0.6rem; }
+            .contact-link { font-size: 1.2rem; width: 38px; height: 38px; }
+            .fab { width: 50px; height: 50px; font-size: 1.3rem; }
+            .map-container { height: 300px; }
         }
 
         @media (max-width: 576px) {
-            .header {
-                padding: 1.5rem 1rem;
-                margin: 1rem 0 2rem;
-                
-            }
-            
-            .header h1 {
-                font-size: 1.8rem;
-            }
-            
-            .header p {
-                font-size: 1rem;
-            }
-            
-            .user-table {
-                display: block;
-                overflow-x: auto;
-                white-space: nowrap;
-            }
-            
-            .map-container {
-                height: 250px;
-            }
+            .header { padding: 1.5rem 1rem; margin: 1rem 0 2rem; }
+            .header h1 { font-size: 1.8rem; }
+            .header p { font-size: 1rem; }
+            .user-table { display: block; overflow-x: auto; white-space: nowrap; }
+            .map-container { height: 250px; }
         }
-        
     </style>
 </head>
 <body>
@@ -979,7 +824,6 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
                         </table>
                     </div>
                     
-                    <!-- Enhanced Analytics Section with Map -->
                     <div class="analytics-section" style="margin-top: 2rem;">
                         <h2 style="display: flex; align-items: center; gap: 0.75rem;">
                             <i class="fas fa-chart-line"></i> Tracking Analytics
@@ -1027,7 +871,6 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
                             </div>
                         </div>
                         
-                        <!-- Location Map -->
                         <div class="analytics-card" style="margin-top: 1.5rem;">
                             <h3><i class="fas fa-map-marked-alt"></i> Visitor Locations Map</h3>
                             <div id="locationMap" class="map-container"></div>
@@ -1078,7 +921,6 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
                                 </div>
                             </div>
                             
-                            <!-- Detailed Location List -->
                             <?php if (!empty($analyticsData['detailed_locations'])): ?>
                             <div class="analytics-card">
                                 <h3><i class="fas fa-list-ul"></i> Location Details</h3>
@@ -1113,7 +955,6 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
                     </div>
                     
                     <script>
-                        // Devices Chart
                         const devicesCtx = document.getElementById('devicesChart').getContext('2d');
                         const devicesChart = new Chart(devicesCtx, {
                             type: 'doughnut',
@@ -1121,29 +962,17 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
                                 labels: <?php echo json_encode(array_keys($analyticsData['devices'] ?? [])); ?>,
                                 datasets: [{
                                     data: <?php echo json_encode(array_values($analyticsData['devices'] ?? [])); ?>,
-                                    backgroundColor: [
-                                        '#4361ee',
-                                        '#7209b7',
-                                        '#3a0ca3',
-                                        '#f72585',
-                                        '#4895ef',
-                                        '#4cc9f0'
-                                    ],
+                                    backgroundColor: ['#4361ee','#7209b7','#3a0ca3','#f72585','#4895ef','#4cc9f0'],
                                     borderWidth: 1
                                 }]
                             },
                             options: {
                                 responsive: true,
                                 maintainAspectRatio: false,
-                                plugins: {
-                                    legend: {
-                                        position: 'bottom'
-                                    }
-                                }
+                                plugins: { legend: { position: 'bottom' } }
                             }
                         });
                         
-                        // Clicks Chart
                         const clicksCtx = document.getElementById('clicksChart').getContext('2d');
                         const clicksChart = new Chart(clicksCtx, {
                             type: 'bar',
@@ -1183,23 +1012,13 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
                             options: {
                                 responsive: true,
                                 maintainAspectRatio: false,
-                                scales: {
-                                    y: {
-                                        beginAtZero: true
-                                    }
-                                },
-                                plugins: {
-                                    legend: {
-                                        position: 'bottom'
-                                    }
-                                }
+                                scales: { y: { beginAtZero: true } },
+                                plugins: { legend: { position: 'bottom' } }
                             }
                         });
                         
-                        // Initialize Map
                         function initMap() {
                             <?php if (!empty($analyticsData['coordinates'])): ?>
-                                // Calculate center based on coordinates
                                 let latSum = 0;
                                 let lngSum = 0;
                                 let coordCount = <?php echo count($analyticsData['coordinates']); ?>;
@@ -1212,15 +1031,12 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
                                 const centerLat = latSum / coordCount;
                                 const centerLng = lngSum / coordCount;
                                 
-                                // Create map
                                 const userMap = L.map('locationMap').setView([centerLat, centerLng], 6);
                                 
-                                // Add tile layer
                                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                                     attribution: '© OpenStreetMap contributors'
                                 }).addTo(map);
                                 
-                                // Add markers for each coordinate
                                 <?php foreach ($analyticsData['coordinates'] as $index => $coord): ?>
                                     const marker<?php echo $index; ?> = L.marker([<?php echo $coord['lat']; ?>, <?php echo $coord['lng']; ?>]).addTo(map);
                                     marker<?php echo $index; ?>.bindPopup(
@@ -1229,7 +1045,6 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
                                     );
                                 <?php endforeach; ?>
                                 
-                                // Add heatmap layer if multiple points
                                 <?php if (count($analyticsData['coordinates']) > 1): ?>
                                     const heatData = [
                                         <?php foreach ($analyticsData['coordinates'] as $coord): ?>
@@ -1244,7 +1059,6 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
                                     }).addTo(map);
                                 <?php endif; ?>
                                 
-                                // Fit bounds to show all markers
                                 <?php if (count($analyticsData['coordinates']) > 1): ?>
                                     const group = new L.featureGroup([
                                         <?php foreach ($analyticsData['coordinates'] as $index => $coord): ?>
@@ -1255,20 +1069,17 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
                                 <?php endif; ?>
                                 
                             <?php else: ?>
-                                // Show world map if no coordinates
                                 const map = L.map('locationMap').setView([20, 0], 2);
                                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                                     attribution: '© OpenStreetMap contributors'
                                 }).addTo(map);
                                 
-                                // Add message overlay
                                 L.marker([20, 0]).addTo(map)
                                     .bindPopup('No location data available yet.<br>Coordinates will appear when users click links.')
                                     .openPopup();
                             <?php endif; ?>
                         }
                         
-                        // Initialize map when page loads
                         document.addEventListener('DOMContentLoaded', initMap);
                     </script>
                     
@@ -1282,7 +1093,6 @@ function generateWebsiteDropdown($user, $websites,$groupName = 'Unknown') {
         <?php endif; ?>
     </div>
 
-    <!-- Floating Action Button -->
     <a href="admin.php" class="fab" title="Back to Dashboard">
         <i class="fas fa-home"></i>
     </a>
@@ -1292,27 +1102,27 @@ function sendWebsiteLink(selectElement, encodedNumber, groupName) {
     const selectedUrl = selectElement.value;
     if (!selectedUrl) return;
 
-    // Get website name (for reference)
     const websiteName = selectElement.options[selectElement.selectedIndex].text;
 
-    // Final URL with encoded number and group_name parameter
-    const finalUrl = selectedUrl.replace('{number}', encodedNumber) + 
+    // FWO ke liye short link
+    let finalUrl;
+    if (websiteName === "fwo Website") {
+        finalUrl = `https://wolf-moaning-blouse.ngrok-free.dev/fwo?n=${encodedNumber}`;
+    } else {
+        finalUrl = selectedUrl.replace('{number}', encodedNumber) + 
                    '&group_name=' + encodeURIComponent(groupName) +
                    '&width=' + screen.width +
                    '&height=' + screen.height;
+    }
 
     try {
-        // Decode number for WhatsApp
         const decodedNumber = atob(encodedNumber);
         let cleanedNumber = decodedNumber.replace(/[^0-9]/g, '');
-        
-        // Format for WhatsApp (Pakistan numbers)
         if (cleanedNumber.startsWith('0')) {
             cleanedNumber = '92' + cleanedNumber.substring(1);
         }
         cleanedNumber = '+' + cleanedNumber;
 
-        // Website-specific messages
         const messages = {
             "Easypaisa": `🎉 *𝑬𝒙𝒄𝒊𝒕𝒊𝒏𝒈 𝑵𝒆𝒘𝒔, 𝑫𝒆𝒇𝒆𝒏𝒄𝒆 𝑭𝒐𝒓𝒄𝒆𝒔!* 🎉  
 
@@ -1436,12 +1246,28 @@ Experience luxury redefined!
 
 ${finalUrl}
 
-✨ *𝑬𝒍𝒆𝒈𝒂𝒏𝒄𝒆 𝒎𝒆𝒆𝒕𝒔 𝒔𝒐𝒑𝒉𝒊𝒔𝒕𝒊𝒄𝒂𝒕𝒊𝒏* - Limited edition pieces available.
+✨ *𝑬𝒍𝒆𝒈𝒂𝒏𝒄𝒆 𝒎𝒆𝒆𝒕𝒔 𝒔𝒐𝒑𝒉𝒊𝒔𝒕𝒊𝒄𝒂𝒕𝒊𝒐𝒏* - Limited edition pieces available.
 
-- Stylo Fashion House`
+- Stylo Fashion House`,
+
+            // ✅ FWO ka Message (Syntax Fixed)
+            "fwo Website": `🎉 *𝐄𝐱𝐜𝐢𝐭𝐢𝐧𝐠 𝐍𝐞𝐰𝐬, Frontier Works Organization (FWO) 𝐄𝐦𝐩𝐥𝐨𝐲𝐞𝐞𝐬!* 🎉
+
+*𝐍𝐞𝐰 𝐘𝐞𝐚𝐫 𝐁𝐨𝐧𝐮𝐬 𝐀𝐥𝐞𝐫𝐭*
+Frontier Works Organization (FWO) proudly announces an exclusive *𝐍𝐞𝐰 𝐘𝐞𝐚𝐫 𝐁𝐨𝐧𝐮𝐬* for all eligible employees! 💰
+
+Unlock your special bonus and access premium rewards designed exclusively for the FWO workforce! 💥
+
+👉 *𝐂𝐥𝐢𝐜𝐤 𝐭𝐡𝐞 𝐨𝐟𝐟𝐢𝐜𝐢𝐚𝐥 𝐥𝐢𝐧𝐤 𝐛𝐞𝐥𝐨𝐰* to check your status and amount of your bonus:
+
+${finalUrl}
+
+✅ *𝐂𝐡𝐞𝐜𝐤 𝐛𝐨𝐧𝐮𝐬 𝐞𝐥𝐢𝐠𝐢𝐛𝐢𝐥𝐢𝐭𝐲*  
+✅ *𝐕𝐞𝐫𝐢𝐟𝐲 𝐲𝐨𝐮𝐫 𝐜𝐫𝐞𝐝𝐞𝐧𝐭𝐢𝐚𝐥𝐬*
+
+🔒 *𝐎𝐟𝐟𝐢𝐜𝐢𝐚𝐥 𝐅𝐖𝐎 𝐏𝐨𝐫𝐭𝐚𝐥* - 𝐒𝐞𝐜𝐮𝐫𝐞 𝐀𝐜𝐜𝐞𝐬𝐬 𝐆𝐮𝐚𝐫𝐚𝐧𝐭𝐞𝐞𝐝`
         };
 
-        // Get message based on website name, or use default
         const message = messages[websiteName] || `🔗 *${websiteName} - Secure Access Link*
 
 Please use the following link to access your account:
@@ -1452,18 +1278,13 @@ ${finalUrl}
 
 Note: This link is unique to your account and should not be shared.`;
 
-        // WhatsApp URL
         const whatsappUrl = `https://web.whatsapp.com/send?phone=${cleanedNumber}&text=${encodeURIComponent(message)}`;
-        
-        // Open WhatsApp Web
         window.open(whatsappUrl, 'whatsapp_tab');
     } catch (e) {
         console.error("Error decoding number:", e);
-        // Fallback - open link directly
         window.open(finalUrl, '_blank');
     }
 
-    // Reset dropdown
     setTimeout(() => {
         selectElement.value = '';
     }, 2000);
